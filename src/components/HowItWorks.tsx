@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import landImg from "@/assets/land.jpg";
 import houseImg from "@/assets/house.jpg";
 import hotelImg from "@/assets/hotel.jpg";
@@ -13,14 +14,36 @@ const HowItWorks = () => {
   return (
     <section id="how-it-works" className="py-20 bg-background">
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-3">How It Works</h2>
-        <p className="text-muted-foreground max-w-xl mx-auto mb-12">
+        <motion.h2
+          className="text-3xl md:text-4xl font-display font-bold text-foreground mb-3"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+        >
+          How It Works
+        </motion.h2>
+        <motion.p
+          className="text-muted-foreground max-w-xl mx-auto mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
           Seamless & trustless real estate transactions powered by Rialo reactive contracts
-        </p>
+        </motion.p>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {categories.map((cat) => (
-            <div key={cat.title} className="group rounded-2xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-xl transition-shadow duration-300">
+          {categories.map((cat, i) => (
+            <motion.div
+              key={cat.title}
+              className="group rounded-2xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-xl transition-shadow duration-300"
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.5, delay: i * 0.15 }}
+              whileHover={{ y: -8 }}
+            >
               <div className="h-52 overflow-hidden">
                 <img src={cat.image} alt={cat.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               </div>
@@ -30,7 +53,7 @@ const HowItWorks = () => {
                   Explore <ArrowRight size={16} />
                 </button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
