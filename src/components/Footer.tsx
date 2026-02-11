@@ -1,4 +1,5 @@
 import { Twitter, Linkedin, Instagram } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Footer = () => {
   const columns = [
@@ -10,7 +11,13 @@ const Footer = () => {
   return (
     <footer className="gradient-footer text-white/80 pt-16 pb-8">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-5 gap-8 mb-12">
+        <motion.div
+          className="grid md:grid-cols-5 gap-8 mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6 }}
+        >
           {/* Brand */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-2">
@@ -29,7 +36,6 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Link columns */}
           {columns.map((col) => (
             <div key={col.title}>
               <h4 className="font-display font-semibold text-white mb-4">{col.title}</h4>
@@ -42,9 +48,8 @@ const Footer = () => {
               </ul>
             </div>
           ))}
-        </div>
+        </motion.div>
 
-        {/* Bottom bar */}
         <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-white/40">© 2026 RialEstate. All rights reserved.</p>
           <div className="flex items-center gap-4">

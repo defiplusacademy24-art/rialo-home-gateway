@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -7,7 +8,6 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        {/* Logo */}
         <a href="#" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg gradient-cta flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -20,7 +20,6 @@ const Navbar = () => {
           </span>
         </a>
 
-        {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
           <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Explore</a>
           <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>
@@ -32,21 +31,27 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile toggle */}
         <button className="md:hidden text-foreground" onClick={() => setOpen(!open)}>
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile menu */}
-      {open && (
-        <div className="md:hidden bg-card border-b border-border px-4 pb-4 space-y-3 animate-fade-in">
-          <a href="#how-it-works" className="block text-sm font-medium text-muted-foreground">Explore</a>
-          <a href="#features" className="block text-sm font-medium text-muted-foreground">Dashboard</a>
-          <button className="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary">Login</button>
-          <button className="w-full px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground">Get Started</button>
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="md:hidden bg-card border-b border-border px-4 pb-4 space-y-3"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <a href="#how-it-works" className="block text-sm font-medium text-muted-foreground">Explore</a>
+            <a href="#features" className="block text-sm font-medium text-muted-foreground">Dashboard</a>
+            <button className="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary">Login</button>
+            <button className="w-full px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground">Get Started</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
