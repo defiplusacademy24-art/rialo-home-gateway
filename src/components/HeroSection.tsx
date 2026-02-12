@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-house.jpg";
 
 const HeroSection = () => {
@@ -45,9 +46,9 @@ const HeroSection = () => {
               <button className="px-6 py-3 rounded-lg gradient-cta text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-teal/25 hover:scale-105 transition-transform duration-200">
                 Explore Properties
               </button>
-              <button className="px-6 py-3 rounded-lg border border-white/30 text-primary-foreground font-semibold hover:bg-white/10 transition-colors hover:scale-105 transition-transform duration-200">
+              <Link to="/signup" className="px-6 py-3 rounded-lg border border-white/30 text-primary-foreground font-semibold hover:bg-white/10 transition-colors hover:scale-105 transition-transform duration-200">
                 Get Started
-              </button>
+              </Link>
             </motion.div>
           </motion.div>
 
