@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Moon, Sun } from "lucide-react";
+import { Menu, X, Moon, Sun, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -12,6 +14,7 @@ const Navbar = () => {
     }
     return false;
   });
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     if (dark) {
@@ -26,7 +29,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <a href="#" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg gradient-cta flex items-center justify-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -36,7 +39,7 @@ const Navbar = () => {
           <span className="text-xl font-display font-bold text-foreground">
             Rial<span className="text-primary">Estate</span>
           </span>
-        </a>
+        </Link>
 
         <div className="hidden md:flex items-center gap-6">
           <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Explore</a>
@@ -48,12 +51,23 @@ const Navbar = () => {
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <button className="px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors">
-            Login
-          </button>
-          <button className="px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground hover:opacity-90 transition-opacity">
-            Get Started
-          </button>
+          {user ? (
+            <button
+              onClick={signOut}
+              className="px-4 py-2 text-sm font-semibold rounded-lg border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors flex items-center gap-2"
+            >
+              <LogOut size={16} /> Logout
+            </button>
+          ) : (
+            <>
+              <Link to="/login" className="px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors">
+                Login
+              </Link>
+              <Link to="/signup" className="px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground hover:opacity-90 transition-opacity">
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="flex md:hidden items-center gap-2">
@@ -81,8 +95,16 @@ const Navbar = () => {
           >
             <a href="#how-it-works" className="block text-sm font-medium text-muted-foreground">Explore</a>
             <a href="#features" className="block text-sm font-medium text-muted-foreground">Dashboard</a>
-            <button className="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary">Login</button>
-            <button className="w-full px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground">Get Started</button>
+            {user ? (
+              <button onClick={signOut} className="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-destructive text-destructive">
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link to="/login" className="block w-full px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary text-center">Login</Link>
+                <Link to="/signup" className="block w-full px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground text-center">Get Started</Link>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
