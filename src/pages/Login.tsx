@@ -31,11 +31,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative">
-      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft size={20} />
-        <span className="text-sm font-medium">Back to Home</span>
-      </Link>
+    <div className="min-h-screen flex flex-col bg-background px-4">
+      <div className="pt-6 pb-2">
+        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft size={20} />
+          <span className="text-sm font-medium">Back to Home</span>
+        </Link>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -129,6 +132,7 @@ const Login = () => {
           </Link>
         </p>
       </motion.div>
+      </div>
     </div>
   );
 };
