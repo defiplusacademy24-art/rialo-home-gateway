@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { Link } from "react-router-dom";
 import testimonialBg from "@/assets/testimonial-bg.jpg";
 
 const testimonials = [
@@ -94,13 +95,14 @@ const Testimonial = () => {
             <p className="text-muted-foreground mb-6 leading-relaxed">
               Buy, rent, or list properties securely. Sign up now and experience hassle-free transactions with Rialo smart contracts.
             </p>
-            <motion.button
-              className="self-start px-6 py-3 rounded-lg gradient-cta text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-teal/20"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Get Started
-            </motion.button>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                to="/signup"
+                className="inline-block px-6 py-3 rounded-lg gradient-cta text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-teal/20"
+              >
+                Get Started
+              </Link>
+            </motion.div>
           </div>
         </motion.div>
       </div>
