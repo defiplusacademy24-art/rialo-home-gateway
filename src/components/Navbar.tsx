@@ -42,8 +42,8 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Explore</a>
-          <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>
+          <Link to="/properties" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Properties</Link>
+          <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
           <button
             onClick={() => setDark(!dark)}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -96,8 +96,8 @@ const Navbar = () => {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25 }}
           >
-            <a href="#how-it-works" className="block text-sm font-medium text-muted-foreground">Explore</a>
-            <a href="#features" className="block text-sm font-medium text-muted-foreground">Dashboard</a>
+            <Link to="/properties" className="block text-sm font-medium text-muted-foreground">Properties</Link>
+            <a href="#features" className="block text-sm font-medium text-muted-foreground">Features</a>
             {user ? (
               <>
                 <Link to="/dashboard" className="block text-sm font-medium text-muted-foreground">Dashboard</Link>
