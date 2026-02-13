@@ -52,12 +52,15 @@ const Navbar = () => {
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           {user ? (
-            <button
-              onClick={signOut}
-              className="px-4 py-2 text-sm font-semibold rounded-lg border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors flex items-center gap-2"
-            >
-              <LogOut size={16} /> Logout
-            </button>
+            <>
+              <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
+              <button
+                onClick={signOut}
+                className="px-4 py-2 text-sm font-semibold rounded-lg border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors flex items-center gap-2"
+              >
+                <LogOut size={16} /> Logout
+              </button>
+            </>
           ) : (
             <>
               <Link to="/login" className="px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors">
@@ -96,9 +99,12 @@ const Navbar = () => {
             <a href="#how-it-works" className="block text-sm font-medium text-muted-foreground">Explore</a>
             <a href="#features" className="block text-sm font-medium text-muted-foreground">Dashboard</a>
             {user ? (
-              <button onClick={signOut} className="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-destructive text-destructive">
-                Logout
-              </button>
+              <>
+                <Link to="/dashboard" className="block text-sm font-medium text-muted-foreground">Dashboard</Link>
+                <button onClick={signOut} className="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-destructive text-destructive">
+                  Logout
+                </button>
+              </>
             ) : (
               <>
                 <Link to="/login" className="block w-full px-4 py-2 text-sm font-semibold rounded-lg border border-primary text-primary text-center">Login</Link>
