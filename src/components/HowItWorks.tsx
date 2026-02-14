@@ -1,13 +1,14 @@
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import landImg from "@/assets/land.jpg";
 import houseImg from "@/assets/house.jpg";
 import hotelImg from "@/assets/hotel.jpg";
 
 const categories = [
-  { title: "Lands", image: landImg },
-  { title: "Houses", image: houseImg },
-  { title: "Hotels", image: hotelImg },
+  { title: "Lands", image: landImg, type: "Land" },
+  { title: "Houses", image: houseImg, type: "House" },
+  { title: "Hotels", image: hotelImg, type: "Hotel" },
 ];
 
 const HowItWorks = () => {
@@ -49,9 +50,9 @@ const HowItWorks = () => {
               </div>
               <div className="p-6 space-y-3">
                 <h3 className="text-xl font-display font-bold text-foreground">{cat.title}</h3>
-                <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg gradient-cta text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
+                <Link to={`/properties?type=${cat.type}`} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg gradient-cta text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">
                   Explore <ArrowRight size={16} />
-                </button>
+                </Link>
               </div>
             </motion.div>
           ))}

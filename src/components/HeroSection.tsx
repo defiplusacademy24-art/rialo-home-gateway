@@ -51,22 +51,6 @@ const HeroSection = () => {
               </Link>
             </motion.div>
 
-            <motion.div
-              className="flex flex-wrap gap-3 pt-1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-            >
-              <Link to="/properties?type=Land" className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-primary-foreground text-sm font-medium hover:bg-white/20 transition-colors">
-                🏞️ Lands
-              </Link>
-              <Link to="/properties?type=House" className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-primary-foreground text-sm font-medium hover:bg-white/20 transition-colors">
-                🏠 Houses
-              </Link>
-              <Link to="/properties?type=Hotel" className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-primary-foreground text-sm font-medium hover:bg-white/20 transition-colors">
-                🏨 Hotels
-              </Link>
-            </motion.div>
           </motion.div>
 
           <motion.div
