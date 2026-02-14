@@ -52,9 +52,9 @@ const PropertyCard = ({ image, title, location, priceNGN, priceUSD, bedrooms, ba
 
         {/* Specs */}
         <div className="flex items-center gap-4 text-muted-foreground text-xs mb-4">
-          <span className="flex items-center gap-1"><Bed size={14} /> {bedrooms} Beds</span>
-          <span className="flex items-center gap-1"><Bath size={14} /> {bathrooms} Baths</span>
-          <span className="flex items-center gap-1"><Maximize size={14} /> {sqft} sqft</span>
+          {bedrooms > 0 && <span className="flex items-center gap-1"><Bed size={14} /> {bedrooms} {type === "Hotel" ? "Rooms" : "Beds"}</span>}
+          {bathrooms > 0 && <span className="flex items-center gap-1"><Bath size={14} /> {bathrooms} Baths</span>}
+          <span className="flex items-center gap-1"><Maximize size={14} /> {sqft.toLocaleString()} sqft</span>
         </div>
 
         {/* Payment badges & CTA */}

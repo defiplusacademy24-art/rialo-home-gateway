@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, X } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
@@ -43,10 +44,30 @@ const PROPERTIES = [
     priceNGN: "35,000,000", priceUSD: "437,500", bedrooms: 2, bathrooms: 1, sqft: 1000, type: "House",
     seller: { name: "Grace A.", initials: "GA", rating: 4, transactions: 8, verified: false },
   },
+  {
+    id: 7, image: property3, title: "Prime Residential Land", location: "Lekki, Lagos",
+    priceNGN: "150,000,000", priceUSD: "1,875,000", bedrooms: 0, bathrooms: 0, sqft: 5000, type: "Land",
+    seller: { name: "Kunle M.", initials: "KM", rating: 5, transactions: 25, verified: true },
+  },
+  {
+    id: 8, image: property1, title: "Commercial Plot", location: "Abuja, FCT",
+    priceNGN: "300,000,000", priceUSD: "3,750,000", bedrooms: 0, bathrooms: 0, sqft: 10000, type: "Land",
+    seller: { name: "Tunde F.", initials: "TF", rating: 4, transactions: 15, verified: true },
+  },
+  {
+    id: 9, image: property4, title: "Luxury Boutique Hotel", location: "Victoria Island, Lagos",
+    priceNGN: "800,000,000", priceUSD: "10,000,000", bedrooms: 20, bathrooms: 20, sqft: 15000, type: "Hotel",
+    seller: { name: "Ola R.", initials: "OR", rating: 5, transactions: 60, verified: true },
+  },
+  {
+    id: 10, image: property5, title: "Beachfront Resort Hotel", location: "Lekki, Lagos",
+    priceNGN: "1,200,000,000", priceUSD: "15,000,000", bedrooms: 50, bathrooms: 50, sqft: 30000, type: "Hotel",
+    seller: { name: "Bisi N.", initials: "BN", rating: 5, transactions: 38, verified: true },
+  },
 ];
 
 const LOCATIONS = ["All Locations", "Lagos", "Abuja", "Ibadan"];
-const TYPES = ["All Types", "House", "Apartment", "Villa", "Townhouse"];
+const TYPES = ["All Types", "House", "Apartment", "Villa", "Townhouse", "Land", "Hotel"];
 const PRICE_RANGES = [
   { label: "Any Price", min: 0, max: Infinity },
   { label: "Under ₦100M", min: 0, max: 100_000_000 },
@@ -58,11 +79,20 @@ const PRICE_RANGES = [
 const parsePrice = (p: string) => Number(p.replace(/,/g, ""));
 
 const Properties = () => {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("All Locations");
   const [type, setType] = useState("All Types");
   const [priceIdx, setPriceIdx] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const typeParam = searchParams.get("type");
+    if (typeParam && TYPES.includes(typeParam)) {
+      setType(typeParam);
+      setShowFilters(true);
+    }
+  }, [searchParams]);
 
   const filtered = useMemo(() => {
     const range = PRICE_RANGES[priceIdx];
