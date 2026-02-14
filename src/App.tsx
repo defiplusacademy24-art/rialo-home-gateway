@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
+import PropertyDetail from "./pages/PropertyDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/properties" element={<Properties />} />
+            <Route path="/property/:id" element={<PropertyDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -5,66 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
-
-import property1 from "@/assets/property-1.jpg";
-import property2 from "@/assets/property-2.jpg";
-import property3 from "@/assets/property-3.jpg";
-import property4 from "@/assets/property-4.jpg";
-import property5 from "@/assets/property-5.jpg";
-import property6 from "@/assets/property-6.jpg";
-
-const PROPERTIES = [
-  {
-    id: 1, image: property1, title: "3-Bedroom Modern House", location: "Lekki, Lagos",
-    priceNGN: "200,000,000", priceUSD: "2,500,000", bedrooms: 3, bathrooms: 3, sqft: 2400, type: "House",
-    seller: { name: "John Doe", initials: "JD", rating: 5, transactions: 30, verified: true },
-  },
-  {
-    id: 2, image: property2, title: "Luxury 2-Bed Apartment", location: "Victoria Island, Lagos",
-    priceNGN: "85,000,000", priceUSD: "1,060,000", bedrooms: 2, bathrooms: 2, sqft: 1200, type: "Apartment",
-    seller: { name: "Amina B.", initials: "AB", rating: 4, transactions: 18, verified: true },
-  },
-  {
-    id: 3, image: property3, title: "5-Bedroom Villa with Pool", location: "Ikoyi, Lagos",
-    priceNGN: "450,000,000", priceUSD: "5,625,000", bedrooms: 5, bathrooms: 4, sqft: 4800, type: "Villa",
-    seller: { name: "Emeka O.", initials: "EO", rating: 5, transactions: 42, verified: true },
-  },
-  {
-    id: 4, image: property4, title: "3-Bedroom Townhouse", location: "Abuja, FCT",
-    priceNGN: "120,000,000", priceUSD: "1,500,000", bedrooms: 3, bathrooms: 2, sqft: 1800, type: "Townhouse",
-    seller: { name: "Sarah K.", initials: "SK", rating: 4, transactions: 12, verified: true },
-  },
-  {
-    id: 5, image: property5, title: "Penthouse Suite", location: "Eko Atlantic, Lagos",
-    priceNGN: "600,000,000", priceUSD: "7,500,000", bedrooms: 4, bathrooms: 3, sqft: 3500, type: "Apartment",
-    seller: { name: "David L.", initials: "DL", rating: 5, transactions: 55, verified: true },
-  },
-  {
-    id: 6, image: property6, title: "Cozy 2-Bedroom Bungalow", location: "Ibadan, Oyo",
-    priceNGN: "35,000,000", priceUSD: "437,500", bedrooms: 2, bathrooms: 1, sqft: 1000, type: "House",
-    seller: { name: "Grace A.", initials: "GA", rating: 4, transactions: 8, verified: false },
-  },
-  {
-    id: 7, image: property3, title: "Prime Residential Land", location: "Lekki, Lagos",
-    priceNGN: "150,000,000", priceUSD: "1,875,000", bedrooms: 0, bathrooms: 0, sqft: 5000, type: "Land",
-    seller: { name: "Kunle M.", initials: "KM", rating: 5, transactions: 25, verified: true },
-  },
-  {
-    id: 8, image: property1, title: "Commercial Plot", location: "Abuja, FCT",
-    priceNGN: "300,000,000", priceUSD: "3,750,000", bedrooms: 0, bathrooms: 0, sqft: 10000, type: "Land",
-    seller: { name: "Tunde F.", initials: "TF", rating: 4, transactions: 15, verified: true },
-  },
-  {
-    id: 9, image: property4, title: "Luxury Boutique Hotel", location: "Victoria Island, Lagos",
-    priceNGN: "800,000,000", priceUSD: "10,000,000", bedrooms: 20, bathrooms: 20, sqft: 15000, type: "Hotel",
-    seller: { name: "Ola R.", initials: "OR", rating: 5, transactions: 60, verified: true },
-  },
-  {
-    id: 10, image: property5, title: "Beachfront Resort Hotel", location: "Lekki, Lagos",
-    priceNGN: "1,200,000,000", priceUSD: "15,000,000", bedrooms: 50, bathrooms: 50, sqft: 30000, type: "Hotel",
-    seller: { name: "Bisi N.", initials: "BN", rating: 5, transactions: 38, verified: true },
-  },
-];
+import { PROPERTIES } from "@/data/properties";
 
 const LOCATIONS = ["All Locations", "Lagos", "Abuja", "Ibadan"];
 const TYPES = ["All Types", "House", "Apartment", "Villa", "Townhouse", "Land", "Hotel"];
