@@ -43,11 +43,28 @@ const HeroSection = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.5 }}
             >
-              <button className="px-6 py-3 rounded-lg gradient-cta text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-teal/25 hover:scale-105 transition-transform duration-200">
+              <Link to="/properties" className="px-6 py-3 rounded-lg gradient-cta text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-teal/25 hover:scale-105 transition-transform duration-200">
                 Explore Properties
-              </button>
+              </Link>
               <Link to="/signup" className="px-6 py-3 rounded-lg border border-white/30 text-primary-foreground font-semibold hover:bg-white/10 transition-colors hover:scale-105 transition-transform duration-200">
                 Get Started
+              </Link>
+            </motion.div>
+
+            <motion.div
+              className="flex flex-wrap gap-3 pt-1"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+            >
+              <Link to="/properties?type=Land" className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-primary-foreground text-sm font-medium hover:bg-white/20 transition-colors">
+                🏞️ Lands
+              </Link>
+              <Link to="/properties?type=House" className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-primary-foreground text-sm font-medium hover:bg-white/20 transition-colors">
+                🏠 Houses
+              </Link>
+              <Link to="/properties?type=Hotel" className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-primary-foreground text-sm font-medium hover:bg-white/20 transition-colors">
+                🏨 Hotels
               </Link>
             </motion.div>
           </motion.div>
