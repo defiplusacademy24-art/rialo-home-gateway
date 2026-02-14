@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
 interface PropertyCardProps {
+  id: number;
   image: string;
   title: string;
   location: string;
@@ -15,7 +17,7 @@ interface PropertyCardProps {
   type: string;
 }
 
-const PropertyCard = ({ image, title, location, priceNGN, priceUSD, bedrooms, bathrooms, sqft, seller, type }: PropertyCardProps) => {
+const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms, bathrooms, sqft, seller, type }: PropertyCardProps) => {
   return (
     <motion.div
       className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col"
@@ -65,9 +67,9 @@ const PropertyCard = ({ image, title, location, priceNGN, priceUSD, bedrooms, ba
           <span className="px-3 py-1 rounded-full border border-border text-xs font-medium text-foreground flex items-center gap-1.5">
             🔷 ETH
           </span>
-          <button className="ml-auto px-4 py-1.5 rounded-lg gradient-cta text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity">
+          <Link to={`/property/${id}`} className="ml-auto px-4 py-1.5 rounded-lg gradient-cta text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity">
             View Details
-          </button>
+          </Link>
         </div>
 
         {/* Escrow note */}
