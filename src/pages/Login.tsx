@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+import logo from "@/assets/logo.png";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -47,12 +48,7 @@ const Login = () => {
       >
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-lg gradient-cta flex items-center justify-center">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </div>
+            <img src={logo} alt="RialEstate Logo" className="w-11 h-11 object-contain" />
             <span className="text-2xl font-display font-bold text-foreground">
               Rial<span className="text-primary">Estate</span>
             </span>
