@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, ArrowLeft, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { USDTIcon, ETHIcon } from "@/components/CryptoIcons";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { PROPERTIES } from "@/data/properties";
@@ -152,8 +153,8 @@ const PropertyDetail = () => {
               <div className="bg-card rounded-2xl border border-border p-6">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Accepted Payment</h3>
                 <div className="flex flex-wrap gap-2">
-                  <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground">💰 USDT</span>
-                  <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground">🔷 ETH</span>
+                  <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground flex items-center gap-1.5"><USDTIcon size={18} /> USDT</span>
+                  <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground flex items-center gap-1.5"><ETHIcon size={18} /> ETH</span>
                   <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground">🏦 Bank Transfer</span>
                 </div>
               </div>
