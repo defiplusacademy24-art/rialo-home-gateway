@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { USDTIcon, ETHIcon } from "@/components/CryptoIcons";
 
 interface PropertyCardProps {
   id: number;
@@ -62,10 +63,10 @@ const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms
         {/* Payment badges & CTA */}
         <div className="flex items-center gap-2 mb-4">
           <span className="px-3 py-1 rounded-full border border-border text-xs font-medium text-foreground flex items-center gap-1.5">
-            💰 USDT
+            <USDTIcon size={14} /> USDT
           </span>
           <span className="px-3 py-1 rounded-full border border-border text-xs font-medium text-foreground flex items-center gap-1.5">
-            🔷 ETH
+            <ETHIcon size={14} /> ETH
           </span>
           <Link to={`/property/${id}`} className="ml-auto px-4 py-1.5 rounded-lg gradient-cta text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity">
             View Details
