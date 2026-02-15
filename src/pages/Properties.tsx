@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, X } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { Search, SlidersHorizontal, X, ArrowLeft } from "lucide-react";
+import { useSearchParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
@@ -56,6 +56,9 @@ const Properties = () => {
         {/* Header */}
         <section className="gradient-hero py-12 md:py-16">
           <div className="container mx-auto px-4">
+            <Link to="/" className="inline-flex items-center gap-2 text-primary-foreground/70 hover:text-primary-foreground text-sm font-medium mb-4 transition-colors">
+              <ArrowLeft size={16} /> Back to Home
+            </Link>
             <motion.h1
               className="text-3xl md:text-4xl font-display font-bold text-primary-foreground mb-2"
               initial={{ opacity: 0, y: 20 }}
