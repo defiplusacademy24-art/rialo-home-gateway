@@ -1,19 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { User, Mail, Calendar, Shield } from "lucide-react";
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import DashboardOverview from "@/components/dashboard/DashboardOverview";
+import SettingsTab from "@/components/dashboard/SettingsTab";
+import KycTab from "@/components/dashboard/KycTab";
+import PlaceholderTab from "@/components/dashboard/PlaceholderTab";
 import { motion } from "framer-motion";
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const [kycStatus, setKycStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -21,81 +24,79 @@ const Dashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
-
-    const fetchData = async () => {
-      const [profileRes, roleRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle(),
-      ]);
-      if (profileRes.data) setProfile(profileRes.data);
-      if (roleRes.data) setRole(roleRes.data.role);
-    };
-
-    fetchData();
+    const [profileRes, roleRes, kycRes] = await Promise.all([
+      supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle(),
+      supabase.from("kyc_submissions").select("status").eq("user_id", user.id).maybeSingle(),
+    ]);
+    if (profileRes.data) setProfile(profileRes.data);
+    if (roleRes.data) setRole(roleRes.data.role);
+    if (kycRes.data) setKycStatus(kycRes.data.status);
   }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading || !user) return null;
 
-  const initials = (profile?.full_name || user.email || "U")
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return (
+          <DashboardOverview
+            fullName={profile?.full_name || null}
+            email={user.email || ""}
+            avatarUrl={profile?.avatar_url || null}
+            role={role}
+            createdAt={user.created_at}
+            kycStatus={kycStatus}
+          />
+        );
+      case "properties":
+        return <PlaceholderTab title="My Properties" description="Manage your listed properties here." />;
+      case "transactions":
+        return <PlaceholderTab title="My Transactions" description="View and track your property transactions." />;
+      case "saved":
+        return <PlaceholderTab title="Saved Properties" description="Properties you've bookmarked will appear here." />;
+      case "kyc":
+        return <KycTab kycStatus={kycStatus} onKycUpdate={fetchData} />;
+      case "settings":
+        return (
+          <SettingsTab
+            fullName={profile?.full_name || null}
+            avatarUrl={profile?.avatar_url || null}
+            onProfileUpdate={fetchData}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-2xl mx-auto space-y-6"
-        >
-          <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="space-y-1">
-                <CardTitle className="text-xl">
-                  {profile?.full_name || "User"}
-                </CardTitle>
-                {role && (
-                  <Badge variant="secondary" className="capitalize">
-                    <Shield className="w-3 h-3 mr-1" />
-                    {role}
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <Mail className="w-4 h-4" />
-                <span className="text-sm">{user.email}</span>
-              </div>
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <User className="w-4 h-4" />
-                <span className="text-sm">{profile?.full_name || "Not set"}</span>
-              </div>
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span className="text-sm">
-                  Joined {new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </main>
+    <div className="min-h-screen bg-background flex">
+      <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex-1 flex flex-col min-h-screen">
+        <DashboardHeader
+          fullName={profile?.full_name || null}
+          avatarUrl={profile?.avatar_url || null}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        <main className="flex-1 p-4 lg:p-8 pb-24 lg:pb-8">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderContent()}
+          </motion.div>
+        </main>
+      </div>
     </div>
   );
 };
