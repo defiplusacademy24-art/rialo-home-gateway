@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Moon, Sun, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, Moon, Sun, LogOut, LayoutDashboard, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
 const Navbar = () => {
@@ -16,6 +16,11 @@ const Navbar = () => {
     return false;
   });
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+
+  // Helper to build links to homepage sections from any page
+  const sectionLink = (hash: string) => (isHome ? hash : `/${hash}`);
 
   useEffect(() => {
     if (dark) {
@@ -38,8 +43,14 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
+          {!isHome && (
+            <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              <Home size={15} /> Home
+            </Link>
+          )}
           <Link to="/properties" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Properties</Link>
-          <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
+          <Link to={sectionLink("#how-it-works")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">How it Works</Link>
+          <Link to={sectionLink("#features")} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</Link>
           <button
             onClick={() => setDark(!dark)}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -94,8 +105,14 @@ const Navbar = () => {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25 }}
           >
-            <Link to="/properties" className="block text-sm font-medium text-muted-foreground">Properties</Link>
-            <a href="#features" className="block text-sm font-medium text-muted-foreground">Features</a>
+            {!isHome && (
+              <Link to="/" onClick={() => setOpen(false)} className="block text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <Home size={15} /> Home
+              </Link>
+            )}
+            <Link to="/properties" onClick={() => setOpen(false)} className="block text-sm font-medium text-muted-foreground">Properties</Link>
+            <Link to={sectionLink("#how-it-works")} onClick={() => setOpen(false)} className="block text-sm font-medium text-muted-foreground">How it Works</Link>
+            <Link to={sectionLink("#features")} onClick={() => setOpen(false)} className="block text-sm font-medium text-muted-foreground">Features</Link>
             {user ? (
               <>
                 <Link to="/dashboard" className="flex items-center gap-2 w-full px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground text-center">
