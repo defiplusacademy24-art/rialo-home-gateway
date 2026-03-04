@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, ArrowLeft, Check } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, ArrowLeft, Check, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { USDTIcon, ETHIcon } from "@/components/CryptoIcons";
@@ -40,9 +40,13 @@ const PropertyDetail = () => {
           <img src={property.image} alt={property.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
           <div className="absolute top-6 left-4 md:left-8 z-10">
-            <Link to="/properties" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-card/80 backdrop-blur-sm border border-border text-foreground text-sm font-medium hover:bg-card transition-colors">
-              <ArrowLeft size={16} /> Back to Listings
-            </Link>
+            <nav className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-card/80 backdrop-blur-sm border border-border text-sm font-medium">
+              <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">Home</Link>
+              <ChevronRight size={14} className="text-muted-foreground" />
+              <Link to="/properties" className="text-muted-foreground hover:text-foreground transition-colors">Properties</Link>
+              <ChevronRight size={14} className="text-muted-foreground" />
+              <span className="text-foreground truncate max-w-[150px]">{property.title}</span>
+            </nav>
           </div>
           <Badge className="absolute top-6 right-4 md:right-8 z-10 bg-primary/90 text-primary-foreground">
             {property.type}
