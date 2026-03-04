@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Moon, Sun, LogOut } from "lucide-react";
+import { Menu, X, Moon, Sun, LogOut, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -49,7 +49,9 @@ const Navbar = () => {
           </button>
           {user ? (
             <>
-              <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
+              <Link to="/dashboard" className="px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground hover:opacity-90 transition-opacity flex items-center gap-2">
+                <LayoutDashboard size={16} /> Dashboard
+              </Link>
               <button
                 onClick={signOut}
                 className="px-4 py-2 text-sm font-semibold rounded-lg border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors flex items-center gap-2"
@@ -96,7 +98,9 @@ const Navbar = () => {
             <a href="#features" className="block text-sm font-medium text-muted-foreground">Features</a>
             {user ? (
               <>
-                <Link to="/dashboard" className="block text-sm font-medium text-muted-foreground">Dashboard</Link>
+                <Link to="/dashboard" className="flex items-center gap-2 w-full px-4 py-2 text-sm font-semibold rounded-lg gradient-cta text-primary-foreground text-center">
+                  <LayoutDashboard size={16} /> Dashboard
+                </Link>
                 <button onClick={signOut} className="w-full px-4 py-2 text-sm font-semibold rounded-lg border border-destructive text-destructive">
                   Logout
                 </button>

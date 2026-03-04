@@ -47,30 +47,22 @@ const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarProps) => 
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border flex justify-around py-2">
-        {menuItems.slice(0, 5).map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onTabChange(item.id)}
-            className={cn(
-              "flex flex-col items-center gap-1 px-2 py-1 text-xs transition-colors",
-              activeTab === item.id ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <item.icon className="w-5 h-5" />
-            <span className="truncate max-w-[60px]">{item.label.split(" ").pop()}</span>
-          </button>
-        ))}
-        <button
-          onClick={() => onTabChange("settings")}
-          className={cn(
-            "flex flex-col items-center gap-1 px-2 py-1 text-xs transition-colors",
-            activeTab === "settings" ? "text-primary" : "text-muted-foreground"
-          )}
-        >
-          <Settings className="w-5 h-5" />
-          <span>Settings</span>
-        </button>
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border overflow-x-auto">
+        <div className="flex min-w-max px-1 py-2">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              className={cn(
+                "flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors shrink-0",
+                activeTab === item.id ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="whitespace-nowrap">{item.label.split(" ").pop()}</span>
+            </button>
+          ))}
+        </div>
       </nav>
     </>
   );
