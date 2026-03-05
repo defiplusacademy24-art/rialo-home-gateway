@@ -1,13 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Camera, Loader2, Trash2 } from "lucide-react";
+import { Camera, Loader2, Trash2, ShieldCheck } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +41,28 @@ const SettingsTab = ({ fullName, avatarUrl, onProfileUpdate }: SettingsTabProps)
 
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+
+  // Role state
+  const [isBuyer, setIsBuyer] = useState(false);
+  const [isSeller, setIsSeller] = useState(false);
+  const [savingRoles, setSavingRoles] = useState(false);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const loadRoles = async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      if (data) {
+        setIsBuyer(data.some((r) => r.role === "buyer"));
+        setIsSeller(data.some((r) => r.role === "seller"));
+        setRolesLoaded(true);
+      }
+    };
+    loadRoles();
+  }, [user]);
 
   const initials = (fullName || user?.email || "U")
     .split(" ")
@@ -132,11 +155,38 @@ const SettingsTab = ({ fullName, avatarUrl, onProfileUpdate }: SettingsTabProps)
     }
   };
 
+  const handleSaveRoles = async () => {
+    if (!user) return;
+    if (!isBuyer && !isSeller) {
+      toast({ title: "Select at least one role", variant: "destructive" });
+      return;
+    }
+    setSavingRoles(true);
+    try {
+      // Delete existing roles
+      await supabase.from("user_roles").delete().eq("user_id", user.id);
+
+      // Insert selected roles
+      const rolesToInsert: { user_id: string; role: "buyer" | "seller" }[] = [];
+      if (isBuyer) rolesToInsert.push({ user_id: user.id, role: "buyer" });
+      if (isSeller) rolesToInsert.push({ user_id: user.id, role: "seller" });
+
+      const { error } = await supabase.from("user_roles").insert(rolesToInsert);
+      if (error) throw error;
+
+      toast({ title: "Roles updated!" });
+      onProfileUpdate();
+    } catch (err: any) {
+      toast({ title: "Failed to update roles", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingRoles(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (!user) return;
     setDeletingAccount(true);
     try {
-      // Delete profile and related data, then sign out
       await supabase.from("kyc_submissions").delete().eq("user_id", user.id);
       await supabase.from("user_roles").delete().eq("user_id", user.id);
       await supabase.from("profiles").delete().eq("user_id", user.id);
@@ -208,7 +258,39 @@ const SettingsTab = ({ fullName, avatarUrl, onProfileUpdate }: SettingsTabProps)
         </CardContent>
       </Card>
 
-      {/* Password */}
+      {/* Account Role */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            Account Role
+          </CardTitle>
+          <CardDescription>Select your role on the platform. You can be a Buyer, Seller, or Both.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={isBuyer} onCheckedChange={(c) => setIsBuyer(!!c)} />
+              <div>
+                <span className="text-sm font-medium text-foreground">Buyer</span>
+                <p className="text-xs text-muted-foreground">Browse and purchase properties</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={isSeller} onCheckedChange={(c) => setIsSeller(!!c)} />
+              <div>
+                <span className="text-sm font-medium text-foreground">Seller</span>
+                <p className="text-xs text-muted-foreground">List and sell properties on the platform</p>
+              </div>
+            </label>
+          </div>
+          <Button onClick={handleSaveRoles} disabled={savingRoles}>
+            {savingRoles ? "Saving..." : "Update Role"}
+          </Button>
+        </CardContent>
+      </Card>
+
+
       <Card>
         <CardHeader>
           <CardTitle>Change Password</CardTitle>

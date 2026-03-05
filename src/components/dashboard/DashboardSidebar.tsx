@@ -10,7 +10,7 @@ interface DashboardSidebarProps {
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "properties", label: "My Properties", icon: Home },
+  { id: "properties", label: "List Property", icon: Home },
   { id: "transactions", label: "My Transactions", icon: Receipt },
   { id: "saved", label: "Saved Properties", icon: Bookmark },
   { id: "kyc", label: "KYC Verification", icon: ShieldCheck },
