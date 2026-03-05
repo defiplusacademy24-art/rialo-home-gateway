@@ -8,6 +8,7 @@ import DashboardOverview from "@/components/dashboard/DashboardOverview";
 import SettingsTab from "@/components/dashboard/SettingsTab";
 import KycTab from "@/components/dashboard/KycTab";
 import PlaceholderTab from "@/components/dashboard/PlaceholderTab";
+import ListPropertyTab from "@/components/dashboard/ListPropertyTab";
 import { motion } from "framer-motion";
 
 const Dashboard = () => {
@@ -56,7 +57,7 @@ const Dashboard = () => {
           />
         );
       case "properties":
-        return <PlaceholderTab title="My Properties" description="Manage your listed properties here." />;
+        return <ListPropertyTab onPropertyCreated={fetchData} />;
       case "transactions":
         return <PlaceholderTab title="My Transactions" description="View and track your property transactions." />;
       case "saved":

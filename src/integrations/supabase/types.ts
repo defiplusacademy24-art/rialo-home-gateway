@@ -95,6 +95,75 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          address: string | null
+          area_sqft: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          country: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          documents: string[] | null
+          id: string
+          images: string[] | null
+          is_tokenized: boolean
+          price: number
+          property_type: string
+          state: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          documents?: string[] | null
+          id?: string
+          images?: string[] | null
+          is_tokenized?: boolean
+          price?: number
+          property_type?: string
+          state?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          area_sqft?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          documents?: string[] | null
+          id?: string
+          images?: string[] | null
+          is_tokenized?: boolean
+          price?: number
+          property_type?: string
+          state?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
