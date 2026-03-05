@@ -1,4 +1,4 @@
-import { LogOut, Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun, Home, Building2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -50,6 +50,24 @@ const DashboardHeader = ({ fullName, avatarUrl, activeTab, onTabChange }: Dashbo
             Rial<span className="text-primary">Estate</span>
           </span>
         </Link>
+
+        {/* Desktop quick links */}
+        <div className="hidden lg:flex items-center gap-2 mr-2">
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <Home size={16} />
+            Home
+          </Link>
+          <Link
+            to="/properties"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <Building2 size={16} />
+            Properties
+          </Link>
+        </div>
 
         {/* Desktop tabs */}
         <nav className="hidden lg:flex items-center gap-1">

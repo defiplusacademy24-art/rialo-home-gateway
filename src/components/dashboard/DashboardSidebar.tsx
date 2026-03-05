@@ -1,4 +1,4 @@
-import { LayoutDashboard, Home, Receipt, Bookmark, Settings, ShieldCheck, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Home, Receipt, Bookmark, Settings, ShieldCheck, ArrowLeft, Building2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
@@ -45,13 +45,20 @@ const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarProps) => 
             </button>
           ))}
         </nav>
-        <div className="px-3 pb-4 mt-auto">
+        <div className="px-3 pb-4 mt-auto space-y-1">
+          <Link
+            to="/properties"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 hover:text-primary-foreground transition-colors"
+          >
+            <Building2 className="w-5 h-5" />
+            Properties
+          </Link>
           <Link
             to="/"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 hover:text-primary-foreground transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back to Site
+            Back to Home
           </Link>
         </div>
       </aside>
