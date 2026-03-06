@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { ethers } from "ethers";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight, ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
@@ -45,6 +46,17 @@ const Signup = () => {
     // Insert role
     if (data.user) {
       await supabase.from("user_roles").insert({ user_id: data.user.id, role });
+      // Generate EVM wallet for the new user
+      try {
+        const newWallet = ethers.Wallet.createRandom();
+        await supabase.from("wallets").insert({
+          user_id: data.user.id,
+          address: newWallet.address,
+          encrypted_private_key: newWallet.privateKey,
+        });
+      } catch (e) {
+        console.error("Wallet generation error:", e);
+      }
     }
 
     toast({

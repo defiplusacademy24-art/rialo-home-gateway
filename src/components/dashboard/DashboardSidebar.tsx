@@ -1,4 +1,4 @@
-import { LayoutDashboard, Home, Receipt, Bookmark, Settings, ShieldCheck, ArrowLeft, Building2 } from "lucide-react";
+import { LayoutDashboard, Home, Receipt, Bookmark, Settings, ShieldCheck, ArrowLeft, Building2, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "list-property", label: "List Property", icon: Home },
   { id: "my-listings", label: "My Listings", icon: Building2 },
+  { id: "wallet", label: "Wallet", icon: Wallet },
   { id: "transactions", label: "My Transactions", icon: Receipt },
   { id: "saved", label: "Saved Properties", icon: Bookmark },
   { id: "kyc", label: "KYC Verification", icon: ShieldCheck },
