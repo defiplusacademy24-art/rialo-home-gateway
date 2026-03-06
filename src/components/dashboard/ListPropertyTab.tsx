@@ -27,9 +27,7 @@ const propertyTypes = [
 
 const currencies = [
   { value: "NGN", label: "NGN (₦)" },
-  { value: "USD", label: "USD ($)" },
   { value: "USDT", label: "USDT" },
-  { value: "BTC", label: "BTC" },
   { value: "ETH", label: "ETH" },
 ];
 

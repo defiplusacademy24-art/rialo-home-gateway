@@ -13,7 +13,8 @@ interface DashboardHeaderProps {
 
 const tabLabels: Record<string, string> = {
   dashboard: "Dashboard",
-  properties: "List Property",
+  "list-property": "List Property",
+  "my-listings": "My Listings",
   transactions: "My Transactions",
   saved: "Saved Properties",
   kyc: "KYC Verification",
