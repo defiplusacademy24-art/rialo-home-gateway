@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Bot, User } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -196,8 +196,15 @@ const SupportChatWidget = () => {
               )}
             </div>
 
-            {/* Input */}
-            <div className="border-t border-border px-3 py-3">
+            {/* Talk to human + Input */}
+            <div className="border-t border-border px-3 pt-2 pb-3 space-y-2">
+              <a
+                href="mailto:support@rialestate.com?subject=Support%20Request%20from%20RialEstate%20App"
+                className="flex items-center justify-center gap-1.5 w-full py-1.5 text-xs font-medium text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg transition-colors"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                Talk to a human — support@rialestate.com
+              </a>
               <div className="flex items-center gap-2">
                 <Input
                   value={input}
