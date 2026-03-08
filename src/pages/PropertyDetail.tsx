@@ -30,7 +30,7 @@ const PropertyDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [initiating, setInitiating] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState<"ETH" | "USDT" | "USDC">("USDT");
+  const [selectedCurrency, setSelectedCurrency] = useState<PaymentMethod>("USDT");
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balances, setBalances] = useState<Record<string, { eth: string; usdt: string; usdc: string }> | null>(null);
   const [balancesLoading, setBalancesLoading] = useState(false);
