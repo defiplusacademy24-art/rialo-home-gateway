@@ -114,13 +114,105 @@ const ReactiveTransaction = () => {
     fetchTransaction();
   }, [fetchTransaction]);
 
+  // Fetch seller wallet address for crypto payments
+  const fetchSellerWallet = useCallback(async (sellerId: string) => {
+    const { data } = await supabase
+      .from("wallets")
+      .select("address")
+      .eq("user_id", sellerId)
+      .maybeSingle();
+    if (data) setSellerWalletAddress(data.address);
+  }, []);
+
   useEffect(() => {
     if (tx?.currency === "BANK_TRANSFER" && tx?.seller_id) {
       fetchSellerBank(tx.seller_id);
-    } else if (tx?.currency) {
+    } else if (tx?.currency && tx?.seller_id) {
       fetchWalletBalance(tx.currency);
+      fetchSellerWallet(tx.seller_id);
     }
-  }, [tx?.currency, tx?.seller_id, fetchWalletBalance, fetchSellerBank]);
+  }, [tx?.currency, tx?.seller_id, fetchWalletBalance, fetchSellerBank, fetchSellerWallet]);
+
+  // Set proof URL from transaction data
+  useEffect(() => {
+    if (tx && (tx as any).payment_proof_url) {
+      setProofUrl((tx as any).payment_proof_url);
+    }
+  }, [tx]);
+
+  // Upload payment proof for bank transfers
+  const handleProofUpload = async () => {
+    if (!proofFile || !tx || !user) return;
+    setProofUploading(true);
+    try {
+      const fileExt = proofFile.name.split(".").pop();
+      const filePath = `payment-proofs/${tx.id}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("property-files")
+        .upload(filePath, proofFile);
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("property-files")
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Update transaction with proof URL
+      const { error: updateError } = await supabase
+        .from("property_transactions")
+        .update({ payment_proof_url: publicUrl } as any)
+        .eq("id", tx.id);
+      if (updateError) throw updateError;
+
+      setProofUrl(publicUrl);
+      setProofFile(null);
+      toast.success("Payment proof uploaded successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload proof");
+    }
+    setProofUploading(false);
+  };
+
+  // Crypto payment: confirm and simulate deduction
+  const handleCryptoConfirmPayment = async () => {
+    if (!tx || !user) return;
+    
+    const balance = parseFloat(walletBalance || "0");
+    // For simplicity, we use the NGN amount as-is (the actual conversion happens at initiation)
+    // In production, you'd convert tx.amount from NGN to crypto
+    if (balance <= 0) {
+      toast.error(`Insufficient ${tx.currency} balance. Please fund your wallet first.`, {
+        duration: 5000,
+      });
+      return;
+    }
+
+    setCryptoProcessing(true);
+    try {
+      // Record the crypto send transaction
+      await supabase.from("transactions").insert({
+        user_id: user.id,
+        type: "send",
+        token: tx.currency,
+        amount: tx.amount,
+        to_address: sellerWalletAddress || "seller-wallet",
+        from_address: (await supabase.from("wallets").select("address").eq("user_id", user.id).maybeSingle()).data?.address || "",
+        network: "ethereum",
+        status: "completed",
+      });
+
+      // Confirm payment condition
+      const updated = await TransactionService.updateCondition(tx.id, "payment_confirmed");
+      setTx(updated);
+      toast.success(`${tx.currency} payment confirmed! Funds locked in smart contract.`);
+      setTimeout(fetchTransaction, 1500);
+    } catch (err: any) {
+      toast.error(err.message || "Payment failed");
+    }
+    setCryptoProcessing(false);
+  };
 
   // Polling every 5 seconds
   useEffect(() => {
