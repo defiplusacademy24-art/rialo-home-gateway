@@ -164,6 +164,59 @@ export type Database = {
         }
         Relationships: []
       }
+      property_transactions: {
+        Row: {
+          amount: number
+          buyer_id: string
+          conditions: Json
+          contract_id: string
+          created_at: string
+          currency: string
+          deadline: string
+          id: string
+          property_id: string
+          seller_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          buyer_id: string
+          conditions?: Json
+          contract_id: string
+          created_at?: string
+          currency?: string
+          deadline: string
+          id?: string
+          property_id: string
+          seller_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          buyer_id?: string
+          conditions?: Json
+          contract_id?: string
+          created_at?: string
+          currency?: string
+          deadline?: string
+          id?: string
+          property_id?: string
+          seller_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_transactions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
