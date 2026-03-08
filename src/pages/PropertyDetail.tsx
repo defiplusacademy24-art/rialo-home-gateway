@@ -408,7 +408,14 @@ const PropertyDetail = () => {
                 >
                   {initiating ? "Initiating..." : selectedCurrency === "BANK_TRANSFER" ? "Pay via Paystack — Initiate Purchase" : `Pay with ${selectedCurrency} — Initiate Purchase`}
                 </Button>
-                <Button variant="outline" className="w-full h-12 text-base">
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-base"
+                  onClick={() => {
+                    if (!user) { navigate("/login"); return; }
+                    navigate(`/schedule-inspection?propertyId=${property.id}`);
+                  }}
+                >
                   Schedule Inspection
                 </Button>
               </div>
