@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
@@ -17,19 +17,21 @@ interface PropertyCardProps {
   sqft: number;
   seller: { name: string; initials: string; rating: number; transactions: number; verified: boolean };
   type: string;
+  sellerId?: string;
 }
 
-const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms, bathrooms, sqft, seller, type }: PropertyCardProps) => {
+const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms, bathrooms, sqft, seller, type, sellerId }: PropertyCardProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const isOwner = !!(user && sellerId && user.id === sellerId);
 
   const handleChat = () => {
     if (!user) {
       navigate("/login");
       return;
     }
-    // Use seller name as a fallback identifier; for DB-listed properties we'd use real seller_id
-    navigate(`/chat?propertyId=${id}&sellerId=seller_${id}`);
+    navigate(`/chat?propertyId=${id}&sellerId=${sellerId || `seller_${id}`}`);
   };
 
   return (
@@ -47,9 +49,16 @@ const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms
         <Badge className="absolute top-3 left-3 bg-primary/90 text-primary-foreground text-xs">
           {type}
         </Badge>
-        <div className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center border border-border">
-          <Maximize size={14} className="text-foreground" />
-        </div>
+        {isOwner && (
+          <Badge className="absolute top-3 right-3 bg-accent/90 text-accent-foreground text-xs">
+            Your Listing
+          </Badge>
+        )}
+        {!isOwner && (
+          <div className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center border border-border">
+            <Maximize size={14} className="text-foreground" />
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -95,7 +104,7 @@ const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms
           <span>Funds locked in Rialo smart contract until all conditions are met.</span>
         </div>
 
-        {/* Seller */}
+        {/* Seller / Owner footer */}
         <div className="flex items-center justify-between pt-3 border-t border-border mt-auto">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full gradient-cta flex items-center justify-center text-primary-foreground font-bold text-xs">
@@ -116,12 +125,21 @@ const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms
               </div>
             </div>
           </div>
-          <button
-            onClick={handleChat}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            <MessageCircle size={12} /> Chat
-          </button>
+          {isOwner ? (
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              <Settings size={12} /> Manage
+            </button>
+          ) : (
+            <button
+              onClick={handleChat}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors"
+            >
+              <MessageCircle size={12} /> Chat
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
