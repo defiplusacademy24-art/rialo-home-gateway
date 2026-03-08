@@ -164,6 +164,48 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          from_address: string | null
+          id: string
+          network: string
+          status: string
+          to_address: string | null
+          token: string
+          tx_hash: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          from_address?: string | null
+          id?: string
+          network?: string
+          status?: string
+          to_address?: string | null
+          token: string
+          tx_hash?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          from_address?: string | null
+          id?: string
+          network?: string
+          status?: string
+          to_address?: string | null
+          token?: string
+          tx_hash?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
