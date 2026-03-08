@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Bot, User, Mail } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, Mail, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -186,6 +186,13 @@ const SupportChatWidget = () => {
                 <p className="text-sm font-semibold text-foreground">Ria — Support</p>
                 <p className="text-xs text-muted-foreground">Typically replies instantly</p>
               </div>
+              <button
+                onClick={() => { setMessages([DEFAULT_MSG]); localStorage.removeItem(STORAGE_KEY); }}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title="Clear chat"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => setOpen(false)}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
