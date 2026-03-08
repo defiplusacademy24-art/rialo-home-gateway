@@ -18,6 +18,7 @@ import Footer from "@/components/Footer";
 import ethLogo from "@/assets/eth-logo.png";
 import usdtLogo from "@/assets/usdt-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
+import nairaLogo from "@/assets/naira-logo.jpg";
 
 const STATUS_STEPS = [
   { key: "PAYMENT_INITIATED", label: "Payment Initiated" },
@@ -38,6 +39,7 @@ const currencyLogos: Record<string, string> = {
   ETH: ethLogo,
   USDT: usdtLogo,
   USDC: usdcLogo,
+  BANK_TRANSFER: nairaLogo,
 };
 
 const ReactiveTransaction = () => {
@@ -51,6 +53,7 @@ const ReactiveTransaction = () => {
   const [countdown, setCountdown] = useState("");
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  const [sellerBank, setSellerBank] = useState<{ bank_name: string; account_name: string; account_number: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/login");
@@ -91,13 +94,27 @@ const ReactiveTransaction = () => {
     setBalanceLoading(false);
   }, [user]);
 
+  // Fetch seller bank details for bank transfer transactions
+  const fetchSellerBank = useCallback(async (sellerId: string) => {
+    const { data } = await supabase
+      .from("bank_details")
+      .select("bank_name, account_name, account_number")
+      .eq("user_id", sellerId)
+      .maybeSingle();
+    if (data) setSellerBank(data);
+  }, []);
+
   useEffect(() => {
     fetchTransaction();
   }, [fetchTransaction]);
 
   useEffect(() => {
-    if (tx?.currency) fetchWalletBalance(tx.currency);
-  }, [tx?.currency, fetchWalletBalance]);
+    if (tx?.currency === "BANK_TRANSFER" && tx?.seller_id) {
+      fetchSellerBank(tx.seller_id);
+    } else if (tx?.currency) {
+      fetchWalletBalance(tx.currency);
+    }
+  }, [tx?.currency, tx?.seller_id, fetchWalletBalance, fetchSellerBank]);
 
   // Polling every 5 seconds
   useEffect(() => {
@@ -413,40 +430,89 @@ const ReactiveTransaction = () => {
               </div>
             </motion.div>
 
-            {/* Wallet Balance Card */}
+            {/* Payment Info Card */}
             <motion.div
               className="bg-card border border-border rounded-2xl p-5 md:p-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-display font-bold text-foreground">Wallet Balance</h3>
-                <button
-                  onClick={() => tx?.currency && fetchWalletBalance(tx.currency)}
-                  disabled={balanceLoading}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <RefreshCw size={14} className={balanceLoading ? "animate-spin" : ""} />
-                </button>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border mb-4">
-                <img src={currencyLogos[tx.currency]} alt={tx.currency} className="w-10 h-10 rounded-full" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground">{tx.currency} Balance</p>
-                  <p className="text-xl font-mono font-bold text-foreground">
-                    {balanceLoading ? (
-                      <span className="inline-block w-20 h-6 bg-muted rounded animate-pulse" />
-                    ) : (
-                      walletBalance ?? "--"
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Wallet size={14} />
-                <span>Payment method: {tx.currency}</span>
-              </div>
+              {tx.currency === "BANK_TRANSFER" ? (
+                <>
+                  <h3 className="text-base font-display font-bold text-foreground mb-4">Seller Bank Details</h3>
+                  {sellerBank ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
+                        <img src={nairaLogo} alt="NGN" className="w-10 h-10 rounded-full" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">Bank Name</p>
+                          <p className="text-sm font-semibold text-foreground">{sellerBank.bank_name}</p>
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Account Name</p>
+                          <p className="text-sm font-semibold text-foreground">{sellerBank.account_name}</p>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Account Number</p>
+                            <p className="text-lg font-mono font-bold text-foreground">{sellerBank.account_number}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(sellerBank.account_number);
+                              toast.success("Account number copied");
+                            }}
+                            className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                          >
+                            <Copy size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Building2 size={14} />
+                        Transfer ₦{Number(tx.amount).toLocaleString()} to this account
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
+                      <Building2 size={24} className="text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">Seller has not added bank details yet.</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-display font-bold text-foreground">Wallet Balance</h3>
+                    <button
+                      onClick={() => tx?.currency && fetchWalletBalance(tx.currency)}
+                      disabled={balanceLoading}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <RefreshCw size={14} className={balanceLoading ? "animate-spin" : ""} />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border mb-4">
+                    <img src={currencyLogos[tx.currency]} alt={tx.currency} className="w-10 h-10 rounded-full" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">{tx.currency} Balance</p>
+                      <p className="text-xl font-mono font-bold text-foreground">
+                        {balanceLoading ? (
+                          <span className="inline-block w-20 h-6 bg-muted rounded animate-pulse" />
+                        ) : (
+                          walletBalance ?? "--"
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Wallet size={14} />
+                    <span>Payment method: {tx.currency}</span>
+                  </div>
+                </>
+              )}
             </motion.div>
 
             {/* Countdown card */}
