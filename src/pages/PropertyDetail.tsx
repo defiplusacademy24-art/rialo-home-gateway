@@ -358,6 +358,20 @@ const PropertyDetail = () => {
                       navigate("/login");
                       return;
                     }
+
+                    // For crypto payments, check wallet balance first
+                    if (selectedCurrency !== "BANK_TRANSFER") {
+                      const balance = parseFloat(selectedBalance || "0");
+                      const cryptoAmount = convert(priceNgn, "NGN", selectedCurrency);
+                      if (!cryptoAmount || balance < cryptoAmount) {
+                        toast.error(`Insufficient ${selectedCurrency} balance. You need ≈ ${cryptoAmount?.toFixed(selectedCurrency === "ETH" ? 6 : 2) || "?"} ${selectedCurrency} but have ${balance.toFixed(selectedCurrency === "ETH" ? 6 : 2)}.`, {
+                          description: "Please fund your wallet before proceeding.",
+                          duration: 5000,
+                        });
+                        return;
+                      }
+                    }
+
                     setInitiating(true);
                     try {
                       const amount = Number(property.priceNGN.replace(/,/g, ""));
