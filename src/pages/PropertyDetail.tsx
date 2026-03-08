@@ -15,6 +15,7 @@ import { PROPERTIES } from "@/data/properties";
 import ethLogo from "@/assets/eth-logo.png";
 import usdtLogo from "@/assets/usdt-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
+import nairaLogo from "@/assets/naira-logo.jpg";
 
 type PaymentMethod = "ETH" | "USDT" | "USDC" | "BANK_TRANSFER";
 
@@ -22,7 +23,7 @@ const CURRENCIES: { key: PaymentMethod; label: string; sub: string; logo?: strin
   { key: "ETH", label: "ETH", sub: "Ethereum", logo: ethLogo, icon: <ETHIcon size={18} />, isCrypto: true },
   { key: "USDT", label: "USDT", sub: "Tether USD", logo: usdtLogo, icon: <USDTIcon size={18} />, isCrypto: true },
   { key: "USDC", label: "USDC", sub: "USD Coin", logo: usdcLogo, icon: <USDCIcon size={18} />, isCrypto: true },
-  { key: "BANK_TRANSFER", label: "Bank Transfer", sub: "NGN Direct Transfer", isCrypto: false },
+  { key: "BANK_TRANSFER", label: "Bank Transfer", sub: "NGN Direct Transfer", logo: nairaLogo, isCrypto: false },
 ];
 
 const PropertyDetail = () => {
@@ -276,8 +277,8 @@ const PropertyDetail = () => {
                 )}
 
                 {selectedCurrency === "BANK_TRANSFER" && (
-                  <div className="mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                    <p className="text-xs text-muted-foreground">Pay via NGN bank transfer. You'll receive account details after initiating the transaction.</p>
+                  <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                    <p className="text-xs text-muted-foreground">Pay via NGN bank transfer. Seller's bank account details will be displayed after you initiate the transaction.</p>
                   </div>
                 )}
               </div>

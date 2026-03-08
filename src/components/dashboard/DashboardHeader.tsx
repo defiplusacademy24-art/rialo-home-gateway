@@ -17,6 +17,7 @@ const tabLabels: Record<string, string> = {
   "my-listings": "My Listings",
   wallet: "Wallet",
   transactions: "My Transactions",
+  "bank-details": "Bank Details",
   saved: "Saved Properties",
   kyc: "KYC Verification",
   settings: "Settings",

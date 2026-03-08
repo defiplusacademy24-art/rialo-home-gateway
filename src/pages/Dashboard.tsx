@@ -12,6 +12,7 @@ import MyTransactionsTab from "@/components/dashboard/MyTransactionsTab";
 import ListPropertyTab from "@/components/dashboard/ListPropertyTab";
 import MyListingsTab from "@/components/dashboard/MyListingsTab";
 import WalletTab from "@/components/dashboard/WalletTab";
+import BankDetailsTab from "@/components/dashboard/BankDetailsTab";
 import { motion } from "framer-motion";
 
 const Dashboard = () => {
@@ -67,6 +68,8 @@ const Dashboard = () => {
         return <WalletTab />;
       case "transactions":
         return <MyTransactionsTab />;
+      case "bank-details":
+        return <BankDetailsTab />;
       case "saved":
         return <PlaceholderTab title="Saved Properties" description="Properties you've bookmarked will appear here." />;
       case "kyc":
