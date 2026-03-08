@@ -238,7 +238,7 @@ function mapDbProperty(p: any, sellerName: string | null): Property {
   };
 
   return {
-    id: p.id, // UUID string — works as key and for routing
+    id: p.id,
     image: firstImage,
     title: p.title,
     location: locationStr,
@@ -249,6 +249,7 @@ function mapDbProperty(p: any, sellerName: string | null): Property {
     sqft: p.area_sqft || 0,
     type: typeMap[p.property_type?.toLowerCase()] || p.property_type || "House",
     seller: { name, initials, rating: 5, transactions: 0, verified: false },
+    sellerId: p.user_id,
     description: p.description || undefined,
   };
 }
