@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import NotificationBell from "./NotificationBell";
 
 interface DashboardHeaderProps {
   fullName: string | null;
@@ -89,7 +90,8 @@ const DashboardHeader = ({ fullName, avatarUrl, activeTab, onTabChange }: Dashbo
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <NotificationBell />
           <button
             onClick={() => setDark(!dark)}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
