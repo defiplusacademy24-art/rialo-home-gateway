@@ -61,7 +61,14 @@ const KycTab = ({ kycStatus, onKycUpdate }: KycTabProps) => {
         { onConflict: "user_id" }
       );
       if (error) throw error;
-      toast({ title: "KYC submitted!", description: "Your verification is being reviewed." });
+
+      // Notify admin via edge function (fire-and-forget)
+      supabase.functions.invoke("admin-kyc-review", {
+        method: "POST" as any,
+        body: { action: "notify_new_submission", user_name: full_legal_name, user_email: user.email },
+      }).catch(() => {});
+
+      toast({ title: "KYC submitted!", description: "Your verification is being reviewed. You'll be notified once approved." });
       onKycUpdate();
     } catch (err: any) {
       toast({ title: "Submission failed", description: err.message, variant: "destructive" });

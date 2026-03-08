@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.support-chat]
 verify_jwt = false
+
+[functions.admin-kyc-review]
+verify_jwt = false
