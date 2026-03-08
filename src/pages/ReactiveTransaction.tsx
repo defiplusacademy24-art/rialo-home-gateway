@@ -27,6 +27,7 @@ const STATUS_STEPS = [
   { key: "CONTRACT_ACTIVE", label: "Contract Period" },
   { key: "TITLE_VERIFICATION", label: "Title Verification" },
   { key: "SETTLEMENT_EXECUTION", label: "Settlement" },
+  { key: "FUNDS_RELEASED", label: "Funds Released" },
   { key: "COMPLETED", label: "Completed" },
 ];
 
