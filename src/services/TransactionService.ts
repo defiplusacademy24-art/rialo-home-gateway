@@ -41,8 +41,25 @@ export class TransactionService {
     const { data, error } = await supabase.functions.invoke("reactive-transaction-engine", {
       body: { action: "create", ...params },
     });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (error) {
+      // For FunctionsHttpError, try to read the response body for transaction_id
+      try {
+        const body = await (error as any).context?.json?.();
+        if (body?.transaction_id) {
+          const err = new Error(body.error || "Active transaction exists") as any;
+          err.transaction_id = body.transaction_id;
+          throw err;
+        }
+      } catch (parseErr: any) {
+        if (parseErr.transaction_id) throw parseErr;
+      }
+      throw error;
+    }
+    if (data?.error) {
+      const err = new Error(data.error) as any;
+      if (data.transaction_id) err.transaction_id = data.transaction_id;
+      throw err;
+    }
     return data;
   }
 

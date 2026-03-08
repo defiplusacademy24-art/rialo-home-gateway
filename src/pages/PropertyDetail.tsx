@@ -289,10 +289,16 @@ const PropertyDetail = () => {
                       toast.success("Transaction initiated!");
                       navigate(`/transaction/${tx.id}`);
                     } catch (err: any) {
-                      if (err.message?.includes("Active transaction exists")) {
-                        toast.info("You already have an active transaction for this property");
+                      const msg = err.message || "";
+                      if (msg.includes("Active transaction exists") || err.transaction_id) {
+                        toast.info("You already have an active transaction for this property. Redirecting...");
+                        if (err.transaction_id) {
+                          navigate(`/transaction/${err.transaction_id}`);
+                        } else {
+                          navigate("/dashboard");
+                        }
                       } else {
-                        toast.error(err.message || "Failed to initiate purchase");
+                        toast.error(msg || "Failed to initiate purchase");
                       }
                     } finally {
                       setInitiating(false);
