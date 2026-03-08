@@ -129,7 +129,20 @@ const ReactiveTransaction = () => {
       const { data, error } = await supabase.functions.invoke("paystack-initialize", {
         body: { transaction_id: tx.id, callback_url: callbackUrl },
       });
-      if (error) throw error;
+      if (error) {
+        // Extract actual error message from edge function response
+        let msg = "Failed to initialize payment";
+        try {
+          const ctx = (error as any).context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            msg = body?.error || msg;
+          } else if (error.message) {
+            msg = error.message;
+          }
+        } catch { /* use default */ }
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
       if (data?.authorization_url) {
         window.location.href = data.authorization_url;
