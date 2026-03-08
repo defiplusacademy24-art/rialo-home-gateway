@@ -78,6 +78,7 @@ const PropertyDetail = () => {
           id: data.id,
           image: firstImage,
           images: data.images || [],
+          documents: data.documents || [],
           title: data.title,
           location: locationStr,
           priceNGN: formattedNGN,
