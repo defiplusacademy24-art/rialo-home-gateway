@@ -8,21 +8,20 @@ import { motion } from "framer-motion";
 import usdtLogo from "@/assets/usdt-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 import ethLogo from "@/assets/eth-logo.png";
+import WalletBalanceCards from "./wallet/WalletBalanceCards";
+import SendReceiveButtons from "./wallet/SendReceiveButtons";
+import SendModal from "./wallet/SendModal";
+import ReceiveModal from "./wallet/ReceiveModal";
+import TransactionHistory from "./wallet/TransactionHistory";
 
 interface WalletData {
   address: string;
   encrypted_private_key: string;
 }
 
-interface NetworkBalances {
-  eth: string;
-  usdt: string;
-  usdc: string;
-}
-
 interface Balances {
-  ethereum: NetworkBalances;
-  base: NetworkBalances;
+  ethereum: { eth: string; usdt: string; usdc: string };
+  base: { eth: string; usdt: string; usdc: string };
 }
 
 const WalletTab = () => {
@@ -36,6 +35,8 @@ const WalletTab = () => {
   const [balances, setBalances] = useState<Balances | null>(null);
   const [balancesLoading, setBalancesLoading] = useState(false);
   const [activeNetwork, setActiveNetwork] = useState<"ethereum" | "base">("ethereum");
+  const [sendOpen, setSendOpen] = useState(false);
+  const [receiveOpen, setReceiveOpen] = useState(false);
 
   useEffect(() => {
     fetchWallet();
@@ -50,7 +51,7 @@ const WalletTab = () => {
       if (error) throw error;
       setBalances(data);
     } catch {
-      // silently fail, balances show as --
+      // silently fail
     }
     setBalancesLoading(false);
   }, []);
@@ -204,42 +205,11 @@ const WalletTab = () => {
             </button>
           </div>
 
-          {/* Balances */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-white/10 rounded-xl p-4">
-              <p className="text-xs opacity-60 mb-1">ETH Balance</p>
-              <p className="text-lg font-mono font-bold truncate">
-                {balancesLoading ? (
-                  <span className="inline-block w-16 h-6 bg-white/20 rounded animate-pulse" />
-                ) : (
-                  currentBalances?.eth ?? "--"
-                )}
-              </p>
-              <p className="text-xs opacity-60 mt-1">Ether</p>
-            </div>
-            <div className="bg-white/10 rounded-xl p-4">
-              <p className="text-xs opacity-60 mb-1">USDT Balance</p>
-              <p className="text-xl font-mono font-bold">
-                {balancesLoading ? (
-                  <span className="inline-block w-20 h-6 bg-white/20 rounded animate-pulse" />
-                ) : (
-                  currentBalances?.usdt ?? "--"
-                )}
-              </p>
-              <p className="text-xs opacity-60 mt-1">Tether USD</p>
-            </div>
-            <div className="bg-white/10 rounded-xl p-4">
-              <p className="text-xs opacity-60 mb-1">USDC Balance</p>
-              <p className="text-xl font-mono font-bold">
-                {balancesLoading ? (
-                  <span className="inline-block w-20 h-6 bg-white/20 rounded animate-pulse" />
-                ) : (
-                  currentBalances?.usdc ?? "--"
-                )}
-              </p>
-              <p className="text-xs opacity-60 mt-1">USD Coin</p>
-            </div>
-          </div>
+          {/* Balances with token logos */}
+          <WalletBalanceCards balances={currentBalances} loading={balancesLoading} />
+
+          {/* Send / Receive */}
+          <SendReceiveButtons onSend={() => setSendOpen(true)} onReceive={() => setReceiveOpen(true)} />
 
           <div className="mb-4">
             <p className="text-xs opacity-60 mb-1">Wallet Address</p>
@@ -275,6 +245,9 @@ const WalletTab = () => {
           </div>
         </div>
       </div>
+
+      {/* Transaction History */}
+      <TransactionHistory />
 
       {/* Private Key Section */}
       <div className="bg-card border border-border rounded-2xl p-6">
@@ -312,7 +285,7 @@ const WalletTab = () => {
                 title="Copy private key"
               >
                 {copied === "Private key" ? (
-                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
                 ) : (
                   <Copy className="w-4 h-4 text-muted-foreground" />
                 )}
@@ -328,7 +301,6 @@ const WalletTab = () => {
         <p className="text-sm text-muted-foreground mb-5">
           Accepted methods for property transactions on RialEstate.
         </p>
-
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <img src={usdtLogo} alt="USDT" className="w-10 h-10 rounded-full shrink-0" />
@@ -338,7 +310,6 @@ const WalletTab = () => {
             </div>
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
           </div>
-
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <img src={usdcLogo} alt="USDC" className="w-10 h-10 rounded-full shrink-0" />
             <div>
@@ -347,7 +318,6 @@ const WalletTab = () => {
             </div>
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
           </div>
-
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <img src={ethLogo} alt="ETH" className="w-10 h-10 rounded-full shrink-0" />
             <div>
@@ -356,7 +326,6 @@ const WalletTab = () => {
             </div>
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
           </div>
-
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5 text-primary" />
@@ -367,7 +336,6 @@ const WalletTab = () => {
             </div>
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
           </div>
-
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
               <span className="text-lg font-bold text-amber-500">₦</span>
@@ -403,6 +371,10 @@ const WalletTab = () => {
           </li>
         </ul>
       </div>
+
+      {/* Modals */}
+      <SendModal open={sendOpen} onClose={() => setSendOpen(false)} network={activeNetwork} walletAddress={wallet.address} />
+      <ReceiveModal open={receiveOpen} onClose={() => setReceiveOpen(false)} address={wallet.address} network={activeNetwork} />
     </motion.div>
   );
 };
