@@ -7,38 +7,77 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Building2, Save, RefreshCw, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface PaystackBank {
+  id: number;
+  name: string;
+  code: string;
+  type: string;
+  currency: string;
+}
 
 const BankDetailsTab = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasExisting, setHasExisting] = useState(false);
-  const [bankName, setBankName] = useState("");
+  const [bankCode, setBankCode] = useState("");
   const [accountName, setAccountName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [banks, setBanks] = useState<PaystackBank[]>([]);
+  const [banksLoading, setBanksLoading] = useState(true);
 
+  // Fetch Paystack bank list
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("paystack-banks");
+        if (error) throw error;
+        if (Array.isArray(data)) {
+          setBanks(data.sort((a: PaystackBank, b: PaystackBank) => a.name.localeCompare(b.name)));
+        }
+      } catch (err) {
+        console.error("Failed to fetch banks:", err);
+        toast.error("Could not load bank list");
+      } finally {
+        setBanksLoading(false);
+      }
+    };
+    fetchBanks();
+  }, []);
+
+  // Fetch existing bank details
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
+    const fetchDetails = async () => {
       const { data } = await supabase
         .from("bank_details")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
       if (data) {
-        setBankName(data.bank_name);
+        setBankCode(data.bank_name); // bank_name column stores bank code
         setAccountName(data.account_name);
         setAccountNumber(data.account_number);
         setHasExisting(true);
       }
       setLoading(false);
     };
-    fetch();
+    fetchDetails();
   }, [user]);
+
+  const selectedBankName = banks.find((b) => b.code === bankCode)?.name || bankCode;
 
   const handleSave = async () => {
     if (!user) return;
-    if (!bankName.trim() || !accountName.trim() || !accountNumber.trim()) {
+    if (!bankCode.trim() || !accountName.trim() || !accountNumber.trim()) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -47,13 +86,13 @@ const BankDetailsTab = () => {
       if (hasExisting) {
         const { error } = await supabase
           .from("bank_details")
-          .update({ bank_name: bankName, account_name: accountName, account_number: accountNumber })
+          .update({ bank_name: bankCode, account_name: accountName, account_number: accountNumber })
           .eq("user_id", user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("bank_details")
-          .insert({ user_id: user.id, bank_name: bankName, account_name: accountName, account_number: accountNumber });
+          .insert({ user_id: user.id, bank_name: bankCode, account_name: accountName, account_number: accountNumber });
         if (error) throw error;
         setHasExisting(true);
       }
@@ -89,7 +128,7 @@ const BankDetailsTab = () => {
           className="flex items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/20 text-sm text-accent"
         >
           <CheckCircle2 size={16} />
-          <span>Bank details saved. Buyers will see these when paying via bank transfer.</span>
+          <span>Bank details saved ({selectedBankName}). Buyers will see these when paying via bank transfer.</span>
         </motion.div>
       )}
 
@@ -100,19 +139,35 @@ const BankDetailsTab = () => {
           </div>
           <div>
             <p className="font-display font-semibold text-foreground">NGN Bank Account</p>
-            <p className="text-xs text-muted-foreground">Nigerian bank transfer details</p>
+            <p className="text-xs text-muted-foreground">Select your bank and enter account details</p>
           </div>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="bankName">Bank Name</Label>
-            <Input
-              id="bankName"
-              placeholder="e.g. First Bank, GTBank, Access Bank"
-              value={bankName}
-              onChange={(e) => setBankName(e.target.value)}
-            />
+            <Label htmlFor="bankCode">Bank</Label>
+            {banksLoading ? (
+              <div className="flex items-center gap-2 h-10 px-3 text-sm text-muted-foreground border border-input rounded-md">
+                <RefreshCw size={14} className="animate-spin" />
+                Loading banks...
+              </div>
+            ) : (
+              <Select value={bankCode} onValueChange={setBankCode}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your bank" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {banks.map((bank) => (
+                    <SelectItem key={bank.code} value={bank.code}>
+                      {bank.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {bankCode && (
+              <p className="text-xs text-muted-foreground">Bank code: <span className="font-mono text-foreground">{bankCode}</span></p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="accountName">Account Name</Label>
@@ -138,7 +193,7 @@ const BankDetailsTab = () => {
         <Button
           className="w-full gradient-cta text-primary-foreground font-semibold"
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || banksLoading}
         >
           {saving ? (
             <RefreshCw size={16} className="animate-spin mr-2" />
