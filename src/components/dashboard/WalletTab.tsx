@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import usdtLogo from "@/assets/usdt-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 import ethLogo from "@/assets/eth-logo.png";
+import nairaLogo from "@/assets/naira-logo.jpg";
 import WalletBalanceCards from "./wallet/WalletBalanceCards";
 import SendReceiveButtons from "./wallet/SendReceiveButtons";
 import SendModal from "./wallet/SendModal";
@@ -337,9 +338,7 @@ const WalletTab = () => {
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
           </div>
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
-            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
-              <span className="text-lg font-bold text-amber-500">₦</span>
-            </div>
+            <img src={nairaLogo} alt="NGN" className="w-10 h-10 rounded-full shrink-0" />
             <div>
               <p className="text-sm font-semibold text-foreground">Bank Transfer</p>
               <p className="text-xs text-muted-foreground">NGN direct transfer</p>
