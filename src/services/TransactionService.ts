@@ -29,6 +29,7 @@ export const TRANSACTION_STATUSES = [
   "TITLE_VERIFICATION",
   "SETTLEMENT_EXECUTION",
   "COMPLETED",
+  "CANCELLED",
 ] as const;
 
 export class TransactionService {
@@ -75,6 +76,15 @@ export class TransactionService {
   static async list(): Promise<PropertyTransaction[]> {
     const { data, error } = await supabase.functions.invoke("reactive-transaction-engine", {
       body: { action: "list" },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    return data;
+  }
+
+  static async cancel(transaction_id: string): Promise<PropertyTransaction> {
+    const { data, error } = await supabase.functions.invoke("reactive-transaction-engine", {
+      body: { action: "cancel", transaction_id },
     });
     if (error) throw error;
     if (data?.error) throw new Error(data.error);

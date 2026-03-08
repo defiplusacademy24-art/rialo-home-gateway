@@ -47,6 +47,7 @@ const ReactiveTransaction = () => {
   const [tx, setTx] = useState<PropertyTransaction | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const [countdown, setCountdown] = useState("");
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
@@ -473,7 +474,7 @@ const ReactiveTransaction = () => {
           </div>
 
           {/* Actions */}
-          {tx.status !== "COMPLETED" && (
+          {tx.status !== "COMPLETED" && tx.status !== "CANCELLED" && (
             <motion.div
               className="mt-4 md:mt-6 bg-card border border-border rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row gap-3"
               initial={{ opacity: 0, y: 20 }}
@@ -507,6 +508,27 @@ const ReactiveTransaction = () => {
                   Verify Title Transfer
                 </Button>
               )}
+              {isBuyer && (
+                <Button
+                  variant="destructive"
+                  className="flex-1 font-semibold"
+                  disabled={cancelling}
+                  onClick={async () => {
+                    setCancelling(true);
+                    try {
+                      await TransactionService.cancel(tx.id);
+                      toast.success("Transaction cancelled");
+                      navigate(`/property/${tx.property_id}`);
+                    } catch (err: any) {
+                      toast.error(err.message || "Failed to cancel");
+                    } finally {
+                      setCancelling(false);
+                    }
+                  }}
+                >
+                  {cancelling ? "Cancelling..." : "Cancel Transaction"}
+                </Button>
+              )}
             </motion.div>
           )}
 
@@ -520,6 +542,22 @@ const ReactiveTransaction = () => {
               <CheckCircle2 className="w-10 h-10 text-accent mx-auto mb-3" />
               <h3 className="font-display font-bold text-foreground mb-1">Transaction Complete</h3>
               <p className="text-sm text-muted-foreground">All conditions met. Funds released to seller.</p>
+            </motion.div>
+          )}
+
+          {tx.status === "CANCELLED" && (
+            <motion.div
+              className="mt-4 md:mt-6 bg-destructive/10 border border-destructive/30 rounded-2xl p-6 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
+              <h3 className="font-display font-bold text-foreground mb-1">Transaction Cancelled</h3>
+              <p className="text-sm text-muted-foreground mb-4">This transaction has been cancelled by the buyer.</p>
+              <Button variant="outline" onClick={() => navigate(`/property/${tx.property_id}`)}>
+                Back to Property
+              </Button>
             </motion.div>
           )}
         </div>

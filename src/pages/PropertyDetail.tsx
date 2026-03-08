@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { USDTIcon, ETHIcon, USDCIcon } from "@/components/CryptoIcons";
@@ -16,18 +16,21 @@ import ethLogo from "@/assets/eth-logo.png";
 import usdtLogo from "@/assets/usdt-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 
-const CURRENCIES = [
-  { key: "ETH", label: "ETH", sub: "Ethereum", logo: ethLogo, icon: <ETHIcon size={18} /> },
-  { key: "USDT", label: "USDT", sub: "Tether USD", logo: usdtLogo, icon: <USDTIcon size={18} /> },
-  { key: "USDC", label: "USDC", sub: "USD Coin", logo: usdcLogo, icon: <USDCIcon size={18} /> },
-] as const;
+type PaymentMethod = "ETH" | "USDT" | "USDC" | "BANK_TRANSFER";
+
+const CURRENCIES: { key: PaymentMethod; label: string; sub: string; logo?: string; icon?: React.ReactNode; isCrypto: boolean }[] = [
+  { key: "ETH", label: "ETH", sub: "Ethereum", logo: ethLogo, icon: <ETHIcon size={18} />, isCrypto: true },
+  { key: "USDT", label: "USDT", sub: "Tether USD", logo: usdtLogo, icon: <USDTIcon size={18} />, isCrypto: true },
+  { key: "USDC", label: "USDC", sub: "USD Coin", logo: usdcLogo, icon: <USDCIcon size={18} />, isCrypto: true },
+  { key: "BANK_TRANSFER", label: "Bank Transfer", sub: "NGN Direct Transfer", isCrypto: false },
+];
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [initiating, setInitiating] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState<"ETH" | "USDT" | "USDC">("USDT");
+  const [selectedCurrency, setSelectedCurrency] = useState<PaymentMethod>("USDT");
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balances, setBalances] = useState<Record<string, { eth: string; usdt: string; usdc: string }> | null>(null);
   const [balancesLoading, setBalancesLoading] = useState(false);
@@ -224,7 +227,13 @@ const PropertyDetail = () => {
                           : "border-border hover:border-muted-foreground/30"
                       }`}
                     >
-                      <img src={c.logo} alt={c.key} className="w-8 h-8 rounded-full" />
+                      {c.logo ? (
+                        <img src={c.logo} alt={c.key} className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+                          <Building2 size={16} className="text-amber-500" />
+                        </div>
+                      )}
                       <div className="flex-1 text-left">
                         <p className="text-sm font-semibold text-foreground">{c.label}</p>
                         <p className="text-xs text-muted-foreground">{c.sub}</p>
@@ -238,8 +247,8 @@ const PropertyDetail = () => {
                   ))}
                 </div>
 
-                {/* Wallet Balance */}
-                {user && (
+                {/* Wallet Balance - only for crypto */}
+                {user && selectedCurrency !== "BANK_TRANSFER" && (
                   <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-border">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
@@ -263,6 +272,12 @@ const PropertyDetail = () => {
                         <span className="text-sm text-muted-foreground font-normal">No wallet found</span>
                       )}
                     </p>
+                  </div>
+                )}
+
+                {selectedCurrency === "BANK_TRANSFER" && (
+                  <div className="mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                    <p className="text-xs text-muted-foreground">Pay via NGN bank transfer. You'll receive account details after initiating the transaction.</p>
                   </div>
                 )}
               </div>
@@ -305,7 +320,7 @@ const PropertyDetail = () => {
                     }
                   }}
                 >
-                  {initiating ? "Initiating..." : `Pay with ${selectedCurrency} — Initiate Purchase`}
+                  {initiating ? "Initiating..." : selectedCurrency === "BANK_TRANSFER" ? "Pay via Bank — Initiate Purchase" : `Pay with ${selectedCurrency} — Initiate Purchase`}
                 </Button>
                 <Button variant="outline" className="w-full h-12 text-base">
                   Schedule Inspection
