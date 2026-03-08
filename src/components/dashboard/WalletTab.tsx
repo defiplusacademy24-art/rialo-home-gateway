@@ -17,6 +17,7 @@ interface WalletData {
 interface NetworkBalances {
   eth: string;
   usdt: string;
+  usdc: string;
 }
 
 interface Balances {
@@ -204,7 +205,7 @@ const WalletTab = () => {
           </div>
 
           {/* Balances */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-white/10 rounded-xl p-4">
               <p className="text-xs opacity-60 mb-1">ETH Balance</p>
               <p className="text-xl font-mono font-bold">
@@ -226,6 +227,17 @@ const WalletTab = () => {
                 )}
               </p>
               <p className="text-xs opacity-60 mt-1">Tether USD</p>
+            </div>
+            <div className="bg-white/10 rounded-xl p-4">
+              <p className="text-xs opacity-60 mb-1">USDC Balance</p>
+              <p className="text-xl font-mono font-bold">
+                {balancesLoading ? (
+                  <span className="inline-block w-20 h-6 bg-white/20 rounded animate-pulse" />
+                ) : (
+                  currentBalances?.usdc ?? "--"
+                )}
+              </p>
+              <p className="text-xs opacity-60 mt-1">USD Coin</p>
             </div>
           </div>
 
