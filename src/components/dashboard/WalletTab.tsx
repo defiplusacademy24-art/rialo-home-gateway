@@ -5,6 +5,8 @@ import { ethers } from "ethers";
 import { useToast } from "@/hooks/use-toast";
 import { Wallet, Copy, Eye, EyeOff, CreditCard, RefreshCw, ExternalLink, Shield, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import usdtLogo from "@/assets/usdt-logo.png";
+import ethLogo from "@/assets/eth-logo.png";
 
 interface WalletData {
   address: string;
@@ -316,9 +318,7 @@ const WalletTab = () => {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <span className="text-lg font-bold text-emerald-500">₮</span>
-            </div>
+            <img src={usdtLogo} alt="USDT" className="w-10 h-10 rounded-full shrink-0" />
             <div>
               <p className="text-sm font-semibold text-foreground">USDT (Tether)</p>
               <p className="text-xs text-muted-foreground">Stablecoin · ERC-20</p>
@@ -327,9 +327,7 @@ const WalletTab = () => {
           </div>
 
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
-            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
-              <span className="text-lg font-bold text-blue-500">Ξ</span>
-            </div>
+            <img src={ethLogo} alt="ETH" className="w-10 h-10 rounded-full shrink-0" />
             <div>
               <p className="text-sm font-semibold text-foreground">Ethereum (ETH)</p>
               <p className="text-xs text-muted-foreground">Native currency</p>
