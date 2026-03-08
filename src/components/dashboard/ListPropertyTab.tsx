@@ -323,7 +323,7 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
             Pricing
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">Price *</Label>
@@ -339,6 +339,47 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <div>
+              <Label className="text-base font-display font-semibold">Accepted Payment Methods *</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">Select the payment methods buyers can use to purchase this property.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {PAYMENT_OPTIONS.map((opt) => {
+                const selected = acceptedPayments.includes(opt.key);
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => {
+                      setAcceptedPayments((prev) =>
+                        selected ? prev.filter((p) => p !== opt.key) : [...prev, opt.key]
+                      );
+                    }}
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                      selected
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                        : "border-border hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <img src={opt.logo} alt={opt.key} className="w-8 h-8 rounded-full shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                      <p className="text-xs text-muted-foreground">{opt.sub}</p>
+                    </div>
+                    {selected && (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
+                        <Check size={12} className="text-primary-foreground" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </CardContent>
