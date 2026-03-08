@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TransactionService, PropertyTransaction, TRANSACTION_STATUSES } from "@/services/TransactionService";
+import { PROPERTIES } from "@/data/properties";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle2, ArrowRight, RefreshCw, ShieldCheck } from "lucide-react";
@@ -69,7 +70,7 @@ const MyTransactionsTab = () => {
           {transactions.map((tx, i) => {
             const stepIndex = TRANSACTION_STATUSES.indexOf(tx.status as any);
             const progress = ((stepIndex + 1) / TRANSACTION_STATUSES.length) * 100;
-            const property = tx.properties;
+            const property = PROPERTIES.find((p) => p.id === Number(tx.property_id));
 
             return (
               <motion.div
@@ -81,9 +82,9 @@ const MyTransactionsTab = () => {
                 onClick={() => navigate(`/transaction/${tx.id}`)}
               >
                 <div className="flex flex-col md:flex-row md:items-center gap-4">
-                  {property?.images?.[0] && (
+                  {property?.image && (
                     <img
-                      src={property.images[0]}
+                      src={property.image}
                       alt={property.title}
                       className="w-full md:w-24 h-20 object-cover rounded-xl"
                     />
