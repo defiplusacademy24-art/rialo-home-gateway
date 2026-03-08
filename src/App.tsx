@@ -13,6 +13,7 @@ import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
 import ReactiveTransaction from "./pages/ReactiveTransaction";
 import ResetPassword from "./pages/ResetPassword";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/property/:id" element={<PropertyDetail />} />
             <Route path="/transaction/:id" element={<ReactiveTransaction />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

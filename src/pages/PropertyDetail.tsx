@@ -243,7 +243,13 @@ const PropertyDetail = () => {
                     </div>
                   </div>
                 </div>
-                <Button className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90">
+                <Button
+                  className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90"
+                  onClick={() => {
+                    if (!user) { navigate("/login"); return; }
+                    navigate(`/chat?propertyId=${property.id}&sellerId=seller_${property.id}`);
+                  }}
+                >
                   <MessageCircle size={16} /> Contact Seller
                 </Button>
               </div>

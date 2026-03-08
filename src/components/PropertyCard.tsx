@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { USDTIcon, ETHIcon, USDCIcon } from "@/components/CryptoIcons";
 
@@ -19,6 +20,18 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms, bathrooms, sqft, seller, type }: PropertyCardProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleChat = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    // Use seller name as a fallback identifier; for DB-listed properties we'd use real seller_id
+    navigate(`/chat?propertyId=${id}&sellerId=seller_${id}`);
+  };
+
   return (
     <motion.div
       className="bg-card rounded-2xl border border-border overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col"
@@ -103,7 +116,10 @@ const PropertyCard = ({ id, image, title, location, priceNGN, priceUSD, bedrooms
               </div>
             </div>
           </div>
-          <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors">
+          <button
+            onClick={handleChat}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-foreground hover:bg-muted transition-colors"
+          >
             <MessageCircle size={12} /> Chat
           </button>
         </div>

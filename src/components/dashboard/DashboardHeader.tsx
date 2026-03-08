@@ -20,6 +20,7 @@ const tabLabels: Record<string, string> = {
   transactions: "My Transactions",
   "bank-details": "Bank Details",
   converter: "Converter",
+  messages: "Messages",
   saved: "Saved Properties",
   kyc: "KYC Verification",
   settings: "Settings",
