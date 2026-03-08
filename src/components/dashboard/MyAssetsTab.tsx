@@ -4,8 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ExternalLink, Copy, CheckCircle2, Shield, MapPin, Coins } from "lucide-react";
+import { Loader2, ExternalLink, Copy, CheckCircle2, Shield, MapPin, Coins, QrCode } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { QRCodeSVG } from "qrcode.react";
 
 interface PropertyToken {
   id: string;
@@ -152,6 +153,28 @@ const MyAssetsTab = () => {
                         <p className="font-medium">{new Date(token.transferred_at!).toLocaleDateString()}</p>
                       </div>
                     )}
+                  </div>
+
+                  {/* QR Code verification */}
+                  <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border">
+                    <QRCodeSVG
+                      value={`${window.location.origin}/verify/${token.token_id}`}
+                      size={120}
+                      bgColor="transparent"
+                      fgColor="hsl(var(--foreground))"
+                      level="M"
+                    />
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      Scan to verify ownership on Rialo
+                    </p>
+                    <a
+                      href={`/verify/${token.token_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" /> View verification page
+                    </a>
                   </div>
 
                   {/* Verification badge */}
