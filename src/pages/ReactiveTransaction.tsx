@@ -54,10 +54,7 @@ const ReactiveTransaction = () => {
   const [countdown, setCountdown] = useState("");
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
-  const [sellerBank, setSellerBank] = useState<{ bank_name: string; account_name: string; account_number: string } | null>(null);
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [proofUploading, setProofUploading] = useState(false);
-  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [paystackLoading, setPaystackLoading] = useState(false);
   const [sellerWalletAddress, setSellerWalletAddress] = useState<string | null>(null);
   const [cryptoProcessing, setCryptoProcessing] = useState(false);
 
@@ -100,15 +97,6 @@ const ReactiveTransaction = () => {
     setBalanceLoading(false);
   }, [user]);
 
-  // Fetch seller bank details for bank transfer transactions
-  const fetchSellerBank = useCallback(async (sellerId: string) => {
-    const { data } = await supabase
-      .from("bank_details")
-      .select("bank_name, account_name, account_number")
-      .eq("user_id", sellerId)
-      .maybeSingle();
-    if (data) setSellerBank(data);
-  }, []);
 
   useEffect(() => {
     fetchTransaction();
@@ -125,55 +113,59 @@ const ReactiveTransaction = () => {
   }, []);
 
   useEffect(() => {
-    if (tx?.currency === "BANK_TRANSFER" && tx?.seller_id) {
-      fetchSellerBank(tx.seller_id);
-    } else if (tx?.currency && tx?.seller_id) {
+    if (tx?.currency && tx?.currency !== "BANK_TRANSFER" && tx?.seller_id) {
       fetchWalletBalance(tx.currency);
       fetchSellerWallet(tx.seller_id);
     }
-  }, [tx?.currency, tx?.seller_id, fetchWalletBalance, fetchSellerBank, fetchSellerWallet]);
+  }, [tx?.currency, tx?.seller_id, fetchWalletBalance, fetchSellerWallet]);
 
-  // Set proof URL from transaction data
-  useEffect(() => {
-    if (tx && (tx as any).payment_proof_url) {
-      setProofUrl((tx as any).payment_proof_url);
-    }
-  }, [tx]);
-
-  // Upload payment proof for bank transfers
-  const handleProofUpload = async () => {
-    if (!proofFile || !tx || !user) return;
-    setProofUploading(true);
+  // Paystack: initiate payment for bank transfer
+  const handlePaystackPayment = async () => {
+    if (!tx || !user) return;
+    setPaystackLoading(true);
     try {
-      const fileExt = proofFile.name.split(".").pop();
-      const filePath = `payment-proofs/${tx.id}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("property-files")
-        .upload(filePath, proofFile);
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("property-files")
-        .getPublicUrl(filePath);
-
-      const publicUrl = urlData.publicUrl;
-
-      // Update transaction with proof URL
-      const { error: updateError } = await supabase
-        .from("property_transactions")
-        .update({ payment_proof_url: publicUrl } as any)
-        .eq("id", tx.id);
-      if (updateError) throw updateError;
-
-      setProofUrl(publicUrl);
-      setProofFile(null);
-      toast.success("Payment proof uploaded successfully!");
+      const callbackUrl = `${window.location.origin}/transaction/${tx.id}?paystack_verify=true`;
+      const { data, error } = await supabase.functions.invoke("paystack-initialize", {
+        body: { transaction_id: tx.id, callback_url: callbackUrl },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.authorization_url) {
+        window.location.href = data.authorization_url;
+      }
     } catch (err: any) {
-      toast.error(err.message || "Failed to upload proof");
+      toast.error(err.message || "Failed to initialize payment");
     }
-    setProofUploading(false);
+    setPaystackLoading(false);
   };
+
+  // Verify Paystack payment on callback redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shouldVerify = params.get("paystack_verify");
+    const reference = params.get("reference") || params.get("trxref");
+    if (shouldVerify && reference && tx && !tx.conditions.payment_confirmed) {
+      const verify = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke("paystack-verify", {
+            body: { reference, transaction_id: tx.id },
+          });
+          if (error) throw error;
+          if (data?.verified) {
+            toast.success("Payment verified successfully! Funds locked in smart contract.");
+            fetchTransaction();
+          } else {
+            toast.error(data?.message || "Payment verification failed");
+          }
+        } catch (err: any) {
+          toast.error(err.message || "Verification failed");
+        }
+        // Clean URL
+        window.history.replaceState({}, "", `/transaction/${tx.id}`);
+      };
+      verify();
+    }
+  }, [tx?.id, tx?.conditions?.payment_confirmed]);
 
   // Crypto payment: confirm and simulate deduction
   const handleCryptoConfirmPayment = async () => {
