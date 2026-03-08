@@ -126,6 +126,18 @@ const PropertyDetail = () => {
     fetchWalletAndBalances();
   }, [fetchWalletAndBalances]);
 
+  if (dbLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-24 pb-20 container mx-auto px-4 text-center">
+          <p className="text-muted-foreground">Loading property...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!property) {
     return (
       <div className="min-h-screen bg-background">
