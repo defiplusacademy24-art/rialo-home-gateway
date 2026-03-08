@@ -13,6 +13,7 @@ import ListPropertyTab from "@/components/dashboard/ListPropertyTab";
 import MyListingsTab from "@/components/dashboard/MyListingsTab";
 import WalletTab from "@/components/dashboard/WalletTab";
 import BankDetailsTab from "@/components/dashboard/BankDetailsTab";
+import CurrencyConverterTab from "@/components/dashboard/CurrencyConverterTab";
 import { motion } from "framer-motion";
 
 const Dashboard = () => {
