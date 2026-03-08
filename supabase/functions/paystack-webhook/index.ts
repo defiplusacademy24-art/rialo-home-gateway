@@ -7,13 +7,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-paystack-signature",
 };
 
-// Verify Paystack webhook signature
 function verifySignature(body: string, signature: string, secret: string): boolean {
   const hash = createHmac("sha512", secret).update(body).digest("hex");
   return hash === signature;
 }
 
-// Rule-based reactive engine: derive status from conditions
 function deriveStatus(conditions: Record<string, boolean>): string {
   const { payment_confirmed, buyer_signed, seller_signed, title_verified } = conditions;
   if (!payment_confirmed) return "PAYMENT_INITIATED";
@@ -37,7 +35,6 @@ Deno.serve(async (req) => {
     const rawBody = await req.text();
     const signature = req.headers.get("x-paystack-signature") || "";
 
-    // Verify webhook signature
     if (!verifySignature(rawBody, signature, paystackSecret)) {
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
@@ -47,6 +44,7 @@ Deno.serve(async (req) => {
 
     const event = JSON.parse(rawBody);
 
+    // ===== CHARGE SUCCESS (buyer payment) =====
     if (event.event === "charge.success") {
       const { metadata, reference, amount } = event.data;
       const transactionId = metadata?.transaction_id;
@@ -58,7 +56,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Fetch the transaction
       const { data: tx, error: txError } = await supabase
         .from("property_transactions")
         .select("*")
@@ -72,14 +69,12 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Skip if already confirmed
       if (tx.conditions?.payment_confirmed) {
         return new Response(JSON.stringify({ ok: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      // Update conditions: auto-confirm payment
       const updatedConditions = { ...tx.conditions, payment_confirmed: true };
       const newStatus = deriveStatus(updatedConditions);
 
@@ -92,7 +87,6 @@ Deno.serve(async (req) => {
         })
         .eq("id", transactionId);
 
-      // Notify both parties
       const amountNgn = amount / 100;
       try {
         await supabase.from("notifications").insert([
@@ -114,6 +108,107 @@ Deno.serve(async (req) => {
       } catch (_) { /* non-critical */ }
 
       console.log(`Payment confirmed for transaction ${transactionId}, ref: ${reference}`);
+    }
+
+    // ===== TRANSFER SUCCESS (seller payout) =====
+    if (event.event === "transfer.success") {
+      const { reference, metadata, amount } = event.data;
+      const transactionId = metadata?.transaction_id;
+
+      console.log(`Transfer success received, ref: ${reference}, tx: ${transactionId}`);
+
+      // Update payout status
+      const { data: payout } = await supabase
+        .from("payouts")
+        .select("*")
+        .or(`paystack_transfer_reference.eq.${reference}`)
+        .maybeSingle();
+
+      if (payout) {
+        await supabase
+          .from("payouts")
+          .update({ status: "success" })
+          .eq("id", payout.id);
+
+        const txId = payout.transaction_id || transactionId;
+
+        // Transition reactive transaction to COMPLETED
+        if (txId) {
+          await supabase
+            .from("property_transactions")
+            .update({ status: "COMPLETED" })
+            .eq("id", txId);
+
+          // Notify both parties
+          const { data: tx } = await supabase
+            .from("property_transactions")
+            .select("buyer_id, seller_id, amount, contract_id")
+            .eq("id", txId)
+            .single();
+
+          if (tx) {
+            const amountNgn = payout.amount;
+            try {
+              await supabase.from("notifications").insert([
+                {
+                  user_id: tx.seller_id,
+                  title: "Payout Successful",
+                  message: `₦${Number(amountNgn).toLocaleString()} has been transferred to your bank account. Contract ${tx.contract_id} is now complete.`,
+                  type: "payout",
+                  metadata: { transaction_id: txId, reference },
+                },
+                {
+                  user_id: tx.buyer_id,
+                  title: "Transaction Complete",
+                  message: `Funds have been released to the seller. Contract ${tx.contract_id} is complete. Property ownership transferred.`,
+                  type: "transaction",
+                  metadata: { transaction_id: txId, reference },
+                },
+              ]);
+            } catch (_) { /* non-critical */ }
+          }
+        }
+
+        console.log(`Payout completed for payout ${payout.id}, transaction ${txId}`);
+      } else {
+        console.log(`No payout record found for transfer ref: ${reference}`);
+      }
+    }
+
+    // ===== TRANSFER FAILED =====
+    if (event.event === "transfer.failed" || event.event === "transfer.reversed") {
+      const { reference, metadata } = event.data;
+
+      console.log(`Transfer failed/reversed, ref: ${reference}`);
+
+      const { data: payout } = await supabase
+        .from("payouts")
+        .select("*")
+        .or(`paystack_transfer_reference.eq.${reference}`)
+        .maybeSingle();
+
+      if (payout) {
+        await supabase
+          .from("payouts")
+          .update({
+            status: "failed",
+            error_message: event.data.reason || `Transfer ${event.event}`,
+          })
+          .eq("id", payout.id);
+
+        // Notify seller
+        try {
+          await supabase.from("notifications").insert({
+            user_id: payout.seller_id,
+            title: "Payout Failed",
+            message: `Your payout of ₦${Number(payout.amount).toLocaleString()} failed. Our team will retry the transfer shortly.`,
+            type: "payout",
+            metadata: { payout_id: payout.id, reference },
+          });
+        } catch (_) { /* non-critical */ }
+
+        console.log(`Payout failed for payout ${payout.id}`);
+      }
     }
 
     return new Response(JSON.stringify({ ok: true }), {

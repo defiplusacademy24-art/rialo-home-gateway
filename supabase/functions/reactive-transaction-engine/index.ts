@@ -193,13 +193,37 @@ Deno.serve(async (req) => {
 
         if (updateErr) throw updateErr;
 
-        // If settlement, auto-complete after a moment
+        // If settlement, trigger automatic payout for BANK_TRANSFER transactions
         if (newStatus === "SETTLEMENT_EXECUTION") {
-          // Complete immediately in simulation
-          await supabase
-            .from("property_transactions")
-            .update({ status: "COMPLETED" })
-            .eq("id", transaction_id);
+          if (tx.currency === "BANK_TRANSFER") {
+            // Trigger automatic Paystack payout to seller
+            try {
+              const payoutUrl = `${supabaseUrl}/functions/v1/paystack-payout`;
+              const payoutRes = await fetch(payoutUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${supabaseKey}`,
+                },
+                body: JSON.stringify({ transaction_id }),
+              });
+              const payoutData = await payoutRes.json();
+              if (payoutData.error) {
+                console.error("Auto-payout failed:", payoutData.error);
+              } else {
+                console.log(`Auto-payout initiated for transaction ${transaction_id}`);
+              }
+            } catch (payoutErr: any) {
+              console.error("Auto-payout error:", payoutErr.message);
+            }
+            // Don't auto-complete — wait for Paystack webhook transfer.success
+          } else {
+            // For crypto, complete immediately (simulation)
+            await supabase
+              .from("property_transactions")
+              .update({ status: "COMPLETED" })
+              .eq("id", transaction_id);
+          }
         }
 
         return new Response(JSON.stringify(updated), {

@@ -131,6 +131,53 @@ export type Database = {
         }
         Relationships: []
       }
+      payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          error_message: string | null
+          id: string
+          paystack_recipient_code: string | null
+          paystack_transfer_reference: string | null
+          seller_id: string
+          status: string
+          transaction_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          paystack_recipient_code?: string | null
+          paystack_transfer_reference?: string | null
+          seller_id: string
+          status?: string
+          transaction_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          paystack_recipient_code?: string | null
+          paystack_transfer_reference?: string | null
+          seller_id?: string
+          status?: string
+          transaction_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: true
+            referencedRelation: "property_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
