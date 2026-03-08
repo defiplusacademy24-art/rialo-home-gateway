@@ -282,8 +282,10 @@ const PropertyDetail = () => {
                   <h2 className="text-lg font-display font-bold text-foreground mb-4">Property Documents</h2>
                   <div className="space-y-2">
                     {property.documents.map((doc: string, idx: number) => {
-                      const fileName = doc.split("/").pop() || `Document ${idx + 1}`;
-                      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc);
+                      // Extract clean filename from Supabase storage URL
+                      const urlPath = doc.split("/").pop() || "";
+                      const decodedName = decodeURIComponent(urlPath.split("?")[0]) || `Document ${idx + 1}`;
+                      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(decodedName);
                       return (
                         <a
                           key={idx}
@@ -296,7 +298,7 @@ const PropertyDetail = () => {
                             {isImage ? <ImageIcon size={18} className="text-primary" /> : <FileText size={18} className="text-primary" />}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{isImage ? `Photo ${idx + 1}` : fileName}</p>
+                            <p className="text-sm font-medium text-foreground truncate">{decodedName}</p>
                             <p className="text-xs text-muted-foreground">{isImage ? "Image" : "Document"}</p>
                           </div>
                           <Download size={16} className="text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
