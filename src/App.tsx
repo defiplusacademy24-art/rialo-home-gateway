@@ -15,6 +15,7 @@ import ReactiveTransaction from "./pages/ReactiveTransaction";
 import ResetPassword from "./pages/ResetPassword";
 import Chat from "./pages/Chat";
 import VerifyToken from "./pages/VerifyToken";
+import ScheduleInspection from "./pages/ScheduleInspection";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/verify/:tokenId" element={<VerifyToken />} />
+            <Route path="/schedule-inspection" element={<ScheduleInspection />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
