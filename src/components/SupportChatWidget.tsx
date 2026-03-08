@@ -3,6 +3,9 @@ import { MessageCircle, X, Send, Bot, User, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -12,7 +15,10 @@ const STORAGE_KEY = "rialestate_support_chat";
 const DEFAULT_MSG: Msg = { role: "assistant", content: "Hi! I'm **Ria**, your RialEstate assistant. How can I help you today? 😊" };
 
 const SupportChatWidget = () => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [initials, setInitials] = useState("U");
   const [messages, setMessages] = useState<Msg[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -26,6 +32,24 @@ const SupportChatWidget = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetch user profile
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url, full_name")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+        if (data?.full_name) {
+          setInitials(
+            data.full_name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
+          );
+        }
+      });
+  }, [user]);
 
   // Persist messages to localStorage
   useEffect(() => {
@@ -189,9 +213,12 @@ const SupportChatWidget = () => {
                     <p className="whitespace-pre-wrap break-words">{renderContent(msg.content)}</p>
                   </div>
                   {msg.role === "user" && (
-                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                      <User className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
+                    <Avatar className="w-7 h-7 shrink-0 mt-0.5">
+                      <AvatarImage src={avatarUrl || undefined} />
+                      <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
                 </div>
               ))}
