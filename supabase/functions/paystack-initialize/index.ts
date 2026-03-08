@@ -65,7 +65,10 @@ Deno.serve(async (req) => {
     }
 
     // Initialize Paystack transaction
-    const amountInKobo = Math.round(Number(tx.amount) * 100);
+    // In test mode, cap amount to ₦10,000 (Paystack test limit)
+    const actualAmount = Number(tx.amount);
+    const testAmount = Math.min(actualAmount, 10000);
+    const amountInKobo = Math.round(testAmount * 100);
 
     const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
