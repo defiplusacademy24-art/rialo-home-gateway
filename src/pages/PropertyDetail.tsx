@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2, ArrowRightLeft } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2, ArrowRightLeft, Settings } from "lucide-react";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -156,6 +156,7 @@ const PropertyDetail = () => {
 
   const isLand = property.type === "Land";
   const isHotel = property.type === "Hotel";
+  const isOwner = !!(user && property.sellerId && user.id === property.sellerId);
 
   // Get balance for selected currency on ethereum network
   const getSelectedBalance = () => {
@@ -314,17 +315,29 @@ const PropertyDetail = () => {
                     </div>
                   </div>
                 </div>
-                <Button
-                  className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90"
-                  onClick={() => {
-                    if (!user) { navigate("/login"); return; }
-                    // Use actual seller ID if available (from DB property), fallback for static
-                    const sellerId = property.sellerId || `seller_${property.id}`;
-                    navigate(`/chat?propertyId=${property.id}&sellerId=${sellerId}`);
-                  }}
-                >
-                  <MessageCircle size={16} /> Contact Seller
-                </Button>
+                {isOwner ? (
+                  <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 text-center">
+                    <p className="text-sm font-medium text-foreground mb-2">This is your listing</p>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => navigate("/dashboard")}
+                    >
+                      <Settings size={16} /> Manage in Dashboard
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90"
+                    onClick={() => {
+                      if (!user) { navigate("/login"); return; }
+                      const sId = property.sellerId || `seller_${property.id}`;
+                      navigate(`/chat?propertyId=${property.id}&sellerId=${sId}`);
+                    }}
+                  >
+                    <MessageCircle size={16} /> Contact Seller
+                  </Button>
+                )}
               </div>
 
               {/* Payment Method Selection */}
@@ -429,70 +442,86 @@ const PropertyDetail = () => {
 
               {/* CTA */}
               <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
-                <Button
-                  className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90 h-12 text-base"
-                  disabled={initiating}
-                  onClick={async () => {
-                    if (!user) {
-                      navigate("/login");
-                      return;
-                    }
-
-                    // For crypto payments, check wallet balance first
-                    if (selectedCurrency !== "BANK_TRANSFER") {
-                      const balance = parseFloat(selectedBalance || "0");
-                      const cryptoAmount = convert(priceNgn, "NGN", selectedCurrency);
-                      if (!cryptoAmount || balance < cryptoAmount) {
-                        toast.error(`Insufficient ${selectedCurrency} balance. You need ≈ ${cryptoAmount?.toFixed(selectedCurrency === "ETH" ? 6 : 2) || "?"} ${selectedCurrency} but have ${balance.toFixed(selectedCurrency === "ETH" ? 6 : 2)}.`, {
-                          description: "Please fund your wallet before proceeding.",
-                          duration: 5000,
-                        });
-                        return;
-                      }
-                    }
-
-                    setInitiating(true);
-                    try {
-                      const amount = Number(property.priceNGN.replace(/,/g, ""));
-                      // Use actual seller ID for DB properties, fallback UUID for static
-                      const sellerId = property.sellerId || "00000000-0000-0000-0000-000000000000";
-                      const tx = await TransactionService.create({
-                        property_id: property.id.toString(),
-                        seller_id: sellerId,
-                        amount,
-                        currency: selectedCurrency,
-                      });
-                      toast.success("Transaction initiated!");
-                      navigate(`/transaction/${tx.id}`);
-                    } catch (err: any) {
-                      const msg = err.message || "";
-                      if (msg.includes("Active transaction exists") || err.transaction_id) {
-                        toast.info("You already have an active transaction for this property. Redirecting...");
-                        if (err.transaction_id) {
-                          navigate(`/transaction/${err.transaction_id}`);
-                        } else {
-                          navigate("/dashboard");
+                {isOwner ? (
+                  <>
+                    <div className="text-center p-4 rounded-xl bg-muted/50 border border-border mb-2">
+                      <p className="text-sm text-muted-foreground">You are the owner of this property. Buyers will be able to purchase and contact you from this page.</p>
+                    </div>
+                    <Button
+                      className="w-full h-12 text-base"
+                      variant="outline"
+                      onClick={() => navigate("/dashboard")}
+                    >
+                      <Settings size={16} /> Go to Dashboard
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90 h-12 text-base"
+                      disabled={initiating}
+                      onClick={async () => {
+                        if (!user) {
+                          navigate("/login");
+                          return;
                         }
-                      } else {
-                        toast.error(msg || "Failed to initiate purchase");
-                      }
-                    } finally {
-                      setInitiating(false);
-                    }
-                  }}
-                >
-                  {initiating ? "Initiating..." : selectedCurrency === "BANK_TRANSFER" ? "Pay via Paystack — Initiate Purchase" : `Pay with ${selectedCurrency} — Initiate Purchase`}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-base"
-                  onClick={() => {
-                    if (!user) { navigate("/login"); return; }
-                    navigate(`/schedule-inspection?propertyId=${property.id}`);
-                  }}
-                >
-                  Schedule Inspection
-                </Button>
+
+                        // For crypto payments, check wallet balance first
+                        if (selectedCurrency !== "BANK_TRANSFER") {
+                          const balance = parseFloat(selectedBalance || "0");
+                          const cryptoAmount = convert(priceNgn, "NGN", selectedCurrency);
+                          if (!cryptoAmount || balance < cryptoAmount) {
+                            toast.error(`Insufficient ${selectedCurrency} balance. You need ≈ ${cryptoAmount?.toFixed(selectedCurrency === "ETH" ? 6 : 2) || "?"} ${selectedCurrency} but have ${balance.toFixed(selectedCurrency === "ETH" ? 6 : 2)}.`, {
+                              description: "Please fund your wallet before proceeding.",
+                              duration: 5000,
+                            });
+                            return;
+                          }
+                        }
+
+                        setInitiating(true);
+                        try {
+                          const amount = Number(property.priceNGN.replace(/,/g, ""));
+                          const sellerId = property.sellerId || "00000000-0000-0000-0000-000000000000";
+                          const tx = await TransactionService.create({
+                            property_id: property.id.toString(),
+                            seller_id: sellerId,
+                            amount,
+                            currency: selectedCurrency,
+                          });
+                          toast.success("Transaction initiated!");
+                          navigate(`/transaction/${tx.id}`);
+                        } catch (err: any) {
+                          const msg = err.message || "";
+                          if (msg.includes("Active transaction exists") || err.transaction_id) {
+                            toast.info("You already have an active transaction for this property. Redirecting...");
+                            if (err.transaction_id) {
+                              navigate(`/transaction/${err.transaction_id}`);
+                            } else {
+                              navigate("/dashboard");
+                            }
+                          } else {
+                            toast.error(msg || "Failed to initiate purchase");
+                          }
+                        } finally {
+                          setInitiating(false);
+                        }
+                      }}
+                    >
+                      {initiating ? "Initiating..." : selectedCurrency === "BANK_TRANSFER" ? "Pay via Paystack — Initiate Purchase" : `Pay with ${selectedCurrency} — Initiate Purchase`}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 text-base"
+                      onClick={() => {
+                        if (!user) { navigate("/login"); return; }
+                        navigate(`/schedule-inspection?propertyId=${property.id}`);
+                      }}
+                    >
+                      Schedule Inspection
+                    </Button>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>

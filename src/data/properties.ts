@@ -25,6 +25,7 @@ export interface Property {
   sqft: number;
   type: string;
   seller: Seller;
+  sellerId?: string; // user_id of the property owner (for DB properties)
   description?: string;
   features?: string[];
 }
