@@ -12,6 +12,7 @@ import MyTransactionsTab from "@/components/dashboard/MyTransactionsTab";
 import ListPropertyTab from "@/components/dashboard/ListPropertyTab";
 import MyListingsTab from "@/components/dashboard/MyListingsTab";
 import WalletTab from "@/components/dashboard/WalletTab";
+import MyAssetsTab from "@/components/dashboard/MyAssetsTab";
 import BankDetailsTab from "@/components/dashboard/BankDetailsTab";
 import CurrencyConverterTab from "@/components/dashboard/CurrencyConverterTab";
 import ChatList from "@/pages/ChatList";
@@ -70,6 +71,8 @@ const Dashboard = () => {
         return <WalletTab />;
       case "transactions":
         return <MyTransactionsTab />;
+      case "my-assets":
+        return <MyAssetsTab />;
       case "bank-details":
         return <BankDetailsTab />;
       case "converter":

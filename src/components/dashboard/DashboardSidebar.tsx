@@ -1,4 +1,4 @@
-import { LayoutDashboard, Home, Receipt, Bookmark, Settings, ShieldCheck, ArrowLeft, Building2, Wallet, Landmark, ArrowRightLeft, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Home, Receipt, Bookmark, Settings, ShieldCheck, ArrowLeft, Building2, Wallet, Landmark, ArrowRightLeft, MessageCircle, Coins } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const menuItems = [
   { id: "my-listings", label: "My Listings", icon: Building2 },
   { id: "wallet", label: "Wallet", icon: Wallet },
   { id: "transactions", label: "My Transactions", icon: Receipt },
+  { id: "my-assets", label: "My Assets", icon: Coins },
   { id: "bank-details", label: "Bank Details", icon: Landmark },
   { id: "converter", label: "Converter", icon: ArrowRightLeft },
   { id: "messages", label: "Messages", icon: MessageCircle },
