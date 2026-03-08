@@ -318,7 +318,9 @@ const PropertyDetail = () => {
                   className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90"
                   onClick={() => {
                     if (!user) { navigate("/login"); return; }
-                    navigate(`/chat?propertyId=${property.id}&sellerId=seller_${property.id}`);
+                    // Use actual seller ID if available (from DB property), fallback for static
+                    const sellerId = property.sellerId || `seller_${property.id}`;
+                    navigate(`/chat?propertyId=${property.id}&sellerId=${sellerId}`);
                   }}
                 >
                   <MessageCircle size={16} /> Contact Seller
