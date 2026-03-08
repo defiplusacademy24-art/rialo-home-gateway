@@ -25,14 +25,8 @@ const Signup = () => {
       navigate("/dashboard", { replace: true });
     }
   }, [user, authLoading, navigate]);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState<"buyer" | "seller">("buyer");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+
+
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
