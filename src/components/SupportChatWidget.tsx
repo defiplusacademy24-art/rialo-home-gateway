@@ -213,9 +213,12 @@ const SupportChatWidget = () => {
                     <p className="whitespace-pre-wrap break-words">{renderContent(msg.content)}</p>
                   </div>
                   {msg.role === "user" && (
-                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                      <User className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
+                    <Avatar className="w-7 h-7 shrink-0 mt-0.5">
+                      <AvatarImage src={avatarUrl || undefined} />
+                      <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
                   )}
                 </div>
               ))}
