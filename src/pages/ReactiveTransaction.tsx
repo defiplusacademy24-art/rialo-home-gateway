@@ -6,8 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { PROPERTIES } from "@/data/properties";
 import { motion } from "framer-motion";
 import {
-  ShieldCheck, Clock, CheckCircle2, Copy, ChevronRight, ArrowLeft, Circle,
-  FileText, Home as HomeIcon, AlertCircle
+  ShieldCheck, Clock, CheckCircle2, Copy, ChevronRight, Circle,
+  FileText, Home as HomeIcon, AlertCircle, Wallet, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,9 @@ import { USDTIcon, USDCIcon, ETHIcon } from "@/components/CryptoIcons";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ethLogo from "@/assets/eth-logo.png";
+import usdtLogo from "@/assets/usdt-logo.png";
+import usdcLogo from "@/assets/usdc-logo.png";
 
 const STATUS_STEPS = [
   { key: "PAYMENT_INITIATED", label: "Payment Initiated" },
@@ -31,6 +34,12 @@ const currencyIcons: Record<string, React.ReactNode> = {
   ETH: <ETHIcon size={16} />,
 };
 
+const currencyLogos: Record<string, string> = {
+  ETH: ethLogo,
+  USDT: usdtLogo,
+  USDC: usdcLogo,
+};
+
 const ReactiveTransaction = () => {
   const { id } = useParams();
   const { user, loading: authLoading } = useAuth();
@@ -39,6 +48,8 @@ const ReactiveTransaction = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [countdown, setCountdown] = useState("");
+  const [walletBalance, setWalletBalance] = useState<string | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/login");
@@ -56,9 +67,36 @@ const ReactiveTransaction = () => {
     }
   }, [id, user]);
 
+  // Fetch wallet balance for the transaction currency
+  const fetchWalletBalance = useCallback(async (currency: string) => {
+    if (!user) return;
+    setBalanceLoading(true);
+    try {
+      const { data: wallet } = await supabase
+        .from("wallets")
+        .select("address")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (wallet) {
+        const { data } = await supabase.functions.invoke("get-wallet-balances", {
+          body: { address: wallet.address },
+        });
+        if (data?.ethereum) {
+          const key = currency.toLowerCase() as "eth" | "usdt" | "usdc";
+          setWalletBalance(data.ethereum[key] ?? "0.00");
+        }
+      }
+    } catch {}
+    setBalanceLoading(false);
+  }, [user]);
+
   useEffect(() => {
     fetchTransaction();
   }, [fetchTransaction]);
+
+  useEffect(() => {
+    if (tx?.currency) fetchWalletBalance(tx.currency);
+  }, [tx?.currency, fetchWalletBalance]);
 
   // Polling every 5 seconds
   useEffect(() => {
@@ -105,7 +143,6 @@ const ReactiveTransaction = () => {
       const updated = await TransactionService.updateCondition(tx.id, condition as any);
       setTx(updated);
       toast.success(`${condition.replace(/_/g, " ")} updated`);
-      // Refetch after a short delay to catch auto-complete
       setTimeout(fetchTransaction, 1500);
     } catch (err: any) {
       toast.error(err.message || "Failed to update condition");
@@ -163,339 +200,328 @@ const ReactiveTransaction = () => {
       <Navbar />
       <main className="pt-20 pb-16">
         {/* Header breadcrumb */}
-        <div className="container mx-auto px-4 pt-6 mb-6">
-          <nav className="flex items-center gap-1.5 text-sm mb-6">
+        <div className="container mx-auto px-4 pt-6 mb-4 md:mb-6">
+          <nav className="flex items-center gap-1.5 text-sm mb-4 md:mb-6">
             <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
             <ChevronRight size={14} className="text-muted-foreground" />
             <span className="text-foreground font-medium">Reactive Transaction</span>
           </nav>
-          <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">REACTIVE TRANSACTION</h1>
+          <h1 className="text-xl md:text-3xl font-display font-bold text-foreground">REACTIVE TRANSACTION</h1>
         </div>
 
-        {/* Top progress bar */}
-        <div className="container mx-auto px-4 mb-8">
-          <div className="gradient-hero rounded-2xl p-4 md:p-5 overflow-x-auto">
-            <div className="flex items-center min-w-[600px]">
-              {STATUS_STEPS.map((step, i) => {
-                const isActive = i <= currentStepIndex;
-                const isCurrent = i === currentStepIndex;
-                return (
-                  <div key={step.key} className="flex items-center flex-1">
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${
-                      isCurrent ? "bg-white/20 text-primary-foreground" : isActive ? "text-primary-foreground" : "text-white/40"
-                    }`}>
-                      <span>{step.label}</span>
-                      {isActive && i < currentStepIndex && (
-                        <CheckCircle2 className="w-4 h-4 text-accent" />
+        {/* Property info card (mobile-first) */}
+        <div className="container mx-auto px-4 mb-4 md:mb-8">
+          <motion.div
+            className="bg-card border border-border rounded-2xl p-4 md:p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex flex-col sm:flex-row gap-4">
+              {property?.images?.[0] && (
+                <img
+                  src={property.images[0]}
+                  alt={property.title}
+                  className="w-full sm:w-40 h-32 sm:h-28 object-cover rounded-xl"
+                />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <h3 className="text-lg md:text-xl font-display font-bold text-foreground truncate">{property?.title}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {property?.city}{property?.state ? `, ${property.state}` : ""}
+                </p>
+                <div className="flex flex-wrap items-baseline gap-3 mb-3">
+                  <span className="text-lg md:text-xl font-display font-bold text-foreground">
+                    ₦{Number(tx.amount).toLocaleString()}
+                  </span>
+                  <span className="text-muted-foreground text-sm">
+                    {tx.currency} ${(Number(tx.amount) / 80).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+
+                {/* Status flow pills */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge className="gradient-cta text-primary-foreground text-xs flex items-center gap-1">
+                    {currencyIcons[tx.currency]} {tx.currency}
+                  </Badge>
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  <Badge variant="secondary" className="text-xs">
+                    {tx.status === "COMPLETED" ? "Completed" : "Contract Active"}
+                  </Badge>
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  <Badge variant="outline" className="text-xs">Settlement</Badge>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Progress stepper (horizontal, scrollable on mobile) */}
+        <div className="container mx-auto px-4 mb-4 md:mb-8">
+          <motion.div
+            className="bg-card border border-border rounded-2xl p-4 md:p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="overflow-x-auto pb-2 -mx-1">
+              <div className="flex items-start min-w-[520px] px-1">
+                {STATUS_STEPS.map((step, i) => {
+                  const isActive = i <= currentStepIndex;
+                  const isCurrent = i === currentStepIndex;
+                  return (
+                    <div key={step.key} className="flex items-center flex-1 min-w-0">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center ${
+                          isActive
+                            ? "bg-accent text-accent-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          {isActive && i < currentStepIndex ? (
+                            <CheckCircle2 className="w-5 h-5" />
+                          ) : isCurrent ? (
+                            <HomeIcon className="w-4 h-4" />
+                          ) : (
+                            <Circle className="w-4 h-4" />
+                          )}
+                        </div>
+                        <span className={`text-[9px] md:text-[11px] mt-1.5 text-center leading-tight max-w-[70px] ${
+                          isCurrent ? "text-accent font-semibold" : isActive ? "text-foreground" : "text-muted-foreground"
+                        }`}>
+                          {step.label}
+                        </span>
+                      </div>
+                      {i < STATUS_STEPS.length - 1 && (
+                        <div className={`flex-1 h-0.5 mx-1 mt-4 md:mt-5 rounded ${
+                          i < currentStepIndex ? "bg-accent" : "bg-border"
+                        }`} />
                       )}
                     </div>
-                    {i < STATUS_STEPS.length - 1 && (
-                      <div className={`flex-1 h-0.5 mx-2 rounded ${
-                        i < currentStepIndex ? "bg-accent" : "bg-white/20"
-                      }`} />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Conditions timeline */}
+            <div className="mt-6 space-y-3">
+              {[
+                { key: "payment_confirmed", label: "Payment Confirmed", detail: "1 Buyer deposited" },
+                { key: "funds_locked", label: "Funds Locked in Smart Contract", detail: null, derived: conditions.payment_confirmed },
+                { key: "buyer_signed", label: "Buyer Signed Agreement", detail: null },
+                { key: "seller_signed", label: "Seller Signed Agreement", detail: null },
+                { key: "title_verified", label: "Title Transfer Verification", detail: conditions.title_verified ? "Verified" : "Pending · Ownership Validation" },
+                { key: "funds_released", label: "Funds Released", detail: null, derived: tx.status === "COMPLETED" },
+              ].map((item) => {
+                const isCondition = ["payment_confirmed", "buyer_signed", "seller_signed", "title_verified"].includes(item.key);
+                const checked = isCondition
+                  ? (conditions as any)[item.key]
+                  : item.derived || false;
+
+                const canUpdate = isCondition && !checked && tx.status !== "COMPLETED" && (
+                  (item.key === "buyer_signed" && isBuyer) ||
+                  (item.key === "seller_signed" && !isBuyer) ||
+                  item.key === "title_verified"
+                );
+
+                return (
+                  <div key={item.key} className="flex items-start sm:items-center gap-3">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 ${
+                      checked ? "bg-accent/15" : "bg-muted"
+                    }`}>
+                      {checked ? (
+                        <CheckCircle2 className="w-4 h-4 text-accent" />
+                      ) : (
+                        <Circle className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className={`text-sm font-medium ${checked ? "text-foreground" : "text-muted-foreground"}`}>
+                        {item.label}
+                      </span>
+                      {item.detail && (
+                        <span className="text-xs text-muted-foreground ml-1 sm:ml-2">{item.detail}</span>
+                      )}
+                    </div>
+                    {canUpdate && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7 shrink-0"
+                        disabled={updating === item.key}
+                        onClick={() => handleUpdateCondition(item.key)}
+                      >
+                        {updating === item.key ? "..." : "Confirm"}
+                      </Button>
                     )}
                   </div>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         </div>
 
-        {/* Smart Contract ID bar */}
-        <div className="container mx-auto px-4 mb-8">
-          <div className="bg-card border border-border rounded-2xl p-4 md:p-5 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl gradient-cta flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <span className="text-xs text-muted-foreground font-medium">Smart Contract ID:</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-display font-bold text-foreground">{tx.contract_id}</span>
-                  <button onClick={copyContractId} className="text-muted-foreground hover:text-foreground transition-colors">
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Contract expires in</span>
-              <span className="font-mono font-bold text-foreground bg-muted px-3 py-1 rounded-lg">{countdown}</span>
-            </div>
-          </div>
-        </div>
-
+        {/* Bottom cards grid */}
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left column */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Property card */}
-              <motion.div
-                className="bg-card border border-border rounded-2xl p-5 md:p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <div className="flex flex-col md:flex-row gap-5">
-                  {property?.images?.[0] && (
-                    <img
-                      src={property.images[0]}
-                      alt={property.title}
-                      className="w-full md:w-48 h-36 object-cover rounded-xl"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between gap-3 mb-1">
-                      <h3 className="text-xl font-display font-bold text-foreground">{property?.title}</h3>
-                      <div className="flex items-center gap-1.5">
-                        <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-                          {currencyIcons[tx.currency]} {tx.currency}
-                        </Badge>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {property?.city}{property?.state ? `, ${property.state}` : ""}
-                    </p>
-                    <div className="flex items-baseline gap-3 mb-4">
-                      <span className="text-xl font-display font-bold text-foreground">
-                        ₦{Number(tx.amount).toLocaleString()}
-                      </span>
-                      <span className="text-muted-foreground text-sm">
-                        {tx.currency} ${(Number(tx.amount) / 80).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                      </span>
-                    </div>
-
-                    {/* Status flow */}
-                    <div className="flex items-center gap-1.5">
-                      <Badge className="gradient-cta text-primary-foreground text-xs">
-                        {currencyIcons[tx.currency]} {tx.currency}
-                      </Badge>
-                      <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                      <Badge variant="secondary" className="text-xs">
-                        {tx.status === "COMPLETED" ? "Completed" : "Contract Active"}
-                      </Badge>
-                      <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                      <Badge variant="outline" className="text-xs">Settlement</Badge>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Progress tracker */}
-              <motion.div
-                className="bg-card border border-border rounded-2xl p-5 md:p-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                {/* Horizontal progress */}
-                <div className="flex items-center justify-between mb-8 overflow-x-auto pb-2">
-                  {STATUS_STEPS.map((step, i) => {
-                    const isActive = i <= currentStepIndex;
-                    const isCurrent = i === currentStepIndex;
-                    return (
-                      <div key={step.key} className="flex items-center flex-1 min-w-0">
-                        <div className="flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            isActive
-                              ? "bg-accent text-accent-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}>
-                            {isActive && i < currentStepIndex ? (
-                              <CheckCircle2 className="w-5 h-5" />
-                            ) : isCurrent ? (
-                              <HomeIcon className="w-4 h-4" />
-                            ) : (
-                              <Circle className="w-4 h-4" />
-                            )}
-                          </div>
-                          <span className={`text-[10px] mt-1.5 text-center whitespace-nowrap ${
-                            isCurrent ? "text-accent font-semibold" : isActive ? "text-foreground" : "text-muted-foreground"
-                          }`}>
-                            {step.label}
-                          </span>
-                        </div>
-                        {i < STATUS_STEPS.length - 1 && (
-                          <div className={`flex-1 h-0.5 mx-1 rounded ${
-                            i < currentStepIndex ? "bg-accent" : "bg-border"
-                          }`} />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Conditions timeline */}
-                <div className="space-y-4">
-                  {[
-                    { key: "payment_confirmed", label: "Payment Confirmed", detail: "1 Buyer deposited" },
-                    { key: "funds_locked", label: "Funds Locked in Smart Contract", detail: null, derived: conditions.payment_confirmed },
-                    { key: "buyer_signed", label: "Buyer Signed Agreement", detail: null },
-                    { key: "seller_signed", label: "Seller Signed Agreement", detail: null },
-                    { key: "title_verified", label: "Title Transfer Verification", detail: conditions.title_verified ? "Verified" : "Pending · Ownership Validation" },
-                    { key: "funds_released", label: "Funds Released", detail: null, derived: tx.status === "COMPLETED" },
-                  ].map((item) => {
-                    const isCondition = ["payment_confirmed", "buyer_signed", "seller_signed", "title_verified"].includes(item.key);
-                    const checked = isCondition
-                      ? (conditions as any)[item.key]
-                      : item.derived || false;
-
-                    const canUpdate = isCondition && !checked && tx.status !== "COMPLETED" && (
-                      (item.key === "buyer_signed" && isBuyer) ||
-                      (item.key === "seller_signed" && !isBuyer) ||
-                      item.key === "title_verified"
-                    );
-
-                    return (
-                      <div key={item.key} className="flex items-center gap-3 group">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                          checked ? "bg-accent/15" : "bg-muted"
-                        }`}>
-                          {checked ? (
-                            <CheckCircle2 className="w-4 h-4 text-accent" />
-                          ) : (
-                            <Circle className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <span className={`text-sm font-medium ${checked ? "text-foreground" : "text-muted-foreground"}`}>
-                            {item.label}
-                          </span>
-                          {item.detail && (
-                            <span className="text-xs text-muted-foreground ml-2">{item.detail}</span>
-                          )}
-                        </div>
-                        {canUpdate && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs h-7"
-                            disabled={updating === item.key}
-                            onClick={() => handleUpdateCondition(item.key)}
-                          >
-                            {updating === item.key ? "..." : "Confirm"}
-                          </Button>
-                        )}
-                        <div className="flex-1 h-px bg-border hidden md:block" />
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Right sidebar */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {/* Smart Contract Card */}
             <motion.div
-              className="space-y-6"
+              className="bg-card border border-border rounded-2xl p-5 md:p-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              {/* Smart Contract Card */}
-              <div className="bg-card border border-border rounded-2xl p-6">
-                <h3 className="text-lg font-display font-bold text-foreground mb-4">Rialo Smart Contract</h3>
-                <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 mb-5">
-                  <FileText className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-mono font-medium text-foreground">{tx.contract_id}</span>
-                  <button onClick={copyContractId} className="ml-auto text-muted-foreground hover:text-foreground">
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="mb-4">
-                  <p className="text-sm font-semibold text-foreground mb-3">Conditions For Settlement:</p>
-                  <div className="space-y-2.5">
-                    {[
-                      { key: "payment_confirmed", label: "Payment Confirmed" },
-                      { key: "buyer_signed", label: "Buyer Signed Agreement" },
-                      { key: "seller_signed", label: "Seller Signed Agreement" },
-                      { key: "title_verified", label: "Title Transfer Verification" },
-                    ].map((c) => {
-                      const checked = (conditions as any)[c.key];
-                      return (
-                        <div key={c.key} className="flex items-center gap-2">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                            checked ? "bg-accent/15" : "bg-muted"
-                          }`}>
-                            {checked ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
-                            ) : (
-                              <Circle className="w-3.5 h-3.5 text-muted-foreground" />
-                            )}
-                          </div>
-                          <span className={`text-sm ${checked ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-                            {c.label}
-                          </span>
-                        </div>
-                      );
-                    })}
-                    {!conditions.title_verified && (
-                      <p className="text-xs text-muted-foreground ml-7">Pending · Ownership Validation</p>
-                    )}
-                  </div>
-                </div>
+              <h3 className="text-base font-display font-bold text-foreground mb-4">Rialo Smart Contract</h3>
+              <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 mb-4">
+                <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="text-sm font-mono font-medium text-foreground truncate">{tx.contract_id}</span>
+                <button onClick={copyContractId} className="ml-auto text-muted-foreground hover:text-foreground shrink-0">
+                  <Copy className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* Countdown card */}
-              <div className="bg-card border border-border rounded-2xl p-6">
-                <p className="text-sm font-semibold text-foreground mb-3">Contract expires in</p>
-                <div className="gradient-hero rounded-xl p-4 text-center">
-                  <div className="flex items-center justify-center gap-1 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                    <span className="text-xs text-white/70">Contract expires in</span>
-                  </div>
-                  <p className="text-4xl font-mono font-bold text-primary-foreground tracking-wider">
-                    {countdown}
+              <p className="text-sm font-semibold text-foreground mb-3">Conditions For Settlement:</p>
+              <div className="space-y-2.5">
+                {[
+                  { key: "payment_confirmed", label: "Payment Confirmed" },
+                  { key: "buyer_signed", label: "Buyer Signed Agreement" },
+                  { key: "seller_signed", label: "Seller Signed Agreement" },
+                  { key: "title_verified", label: "Title Transfer Verification" },
+                ].map((c) => {
+                  const checked = (conditions as any)[c.key];
+                  return (
+                    <div key={c.key} className="flex items-center gap-2">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                        checked ? "bg-accent/15" : "bg-muted"
+                      }`}>
+                        {checked ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <span className={`text-sm ${checked ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                        {c.label}
+                      </span>
+                    </div>
+                  );
+                })}
+                {!conditions.title_verified && (
+                  <p className="text-xs text-muted-foreground ml-7">Pending · Ownership Validation</p>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Wallet Balance Card */}
+            <motion.div
+              className="bg-card border border-border rounded-2xl p-5 md:p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-display font-bold text-foreground">Wallet Balance</h3>
+                <button
+                  onClick={() => tx?.currency && fetchWalletBalance(tx.currency)}
+                  disabled={balanceLoading}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <RefreshCw size={14} className={balanceLoading ? "animate-spin" : ""} />
+                </button>
+              </div>
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border mb-4">
+                <img src={currencyLogos[tx.currency]} alt={tx.currency} className="w-10 h-10 rounded-full" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-muted-foreground">{tx.currency} Balance</p>
+                  <p className="text-xl font-mono font-bold text-foreground">
+                    {balanceLoading ? (
+                      <span className="inline-block w-20 h-6 bg-muted rounded animate-pulse" />
+                    ) : (
+                      walletBalance ?? "--"
+                    )}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Transactions: On-chain</span>
-                </div>
               </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Wallet size={14} />
+                <span>Payment method: {tx.currency}</span>
+              </div>
+            </motion.div>
 
-              {/* Actions */}
-              {tx.status !== "COMPLETED" && (
-                <div className="bg-card border border-border rounded-2xl p-6 space-y-3">
-                  {isBuyer && !conditions.buyer_signed && (
-                    <Button
-                      className="w-full gradient-cta text-primary-foreground font-semibold"
-                      disabled={updating === "buyer_signed"}
-                      onClick={() => handleUpdateCondition("buyer_signed")}
-                    >
-                      Sign Agreement as Buyer
-                    </Button>
-                  )}
-                  {!isBuyer && !conditions.seller_signed && (
-                    <Button
-                      className="w-full gradient-cta text-primary-foreground font-semibold"
-                      disabled={updating === "seller_signed"}
-                      onClick={() => handleUpdateCondition("seller_signed")}
-                    >
-                      Sign Agreement as Seller
-                    </Button>
-                  )}
-                  {conditions.buyer_signed && conditions.seller_signed && !conditions.title_verified && (
-                    <Button
-                      className="w-full gradient-cta text-primary-foreground font-semibold"
-                      disabled={updating === "title_verified"}
-                      onClick={() => handleUpdateCondition("title_verified")}
-                    >
-                      Verify Title Transfer
-                    </Button>
-                  )}
+            {/* Countdown card */}
+            <motion.div
+              className="bg-card border border-border rounded-2xl p-5 md:p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <p className="text-base font-display font-bold text-foreground mb-4">Contract Timer</p>
+              <div className="gradient-hero rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center gap-1 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  <span className="text-xs text-white/70">Contract expires in</span>
                 </div>
-              )}
-
-              {tx.status === "COMPLETED" && (
-                <div className="bg-accent/10 border border-accent/30 rounded-2xl p-6 text-center">
-                  <CheckCircle2 className="w-10 h-10 text-accent mx-auto mb-3" />
-                  <h3 className="font-display font-bold text-foreground mb-1">Transaction Complete</h3>
-                  <p className="text-sm text-muted-foreground">All conditions met. Funds released to seller.</p>
-                </div>
-              )}
+                <p className="text-3xl md:text-4xl font-mono font-bold text-primary-foreground tracking-wider">
+                  {countdown}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Transactions: On-chain</span>
+              </div>
             </motion.div>
           </div>
+
+          {/* Actions */}
+          {tx.status !== "COMPLETED" && (
+            <motion.div
+              className="mt-4 md:mt-6 bg-card border border-border rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row gap-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              {isBuyer && !conditions.buyer_signed && (
+                <Button
+                  className="flex-1 gradient-cta text-primary-foreground font-semibold"
+                  disabled={updating === "buyer_signed"}
+                  onClick={() => handleUpdateCondition("buyer_signed")}
+                >
+                  Sign Agreement as Buyer
+                </Button>
+              )}
+              {!isBuyer && !conditions.seller_signed && (
+                <Button
+                  className="flex-1 gradient-cta text-primary-foreground font-semibold"
+                  disabled={updating === "seller_signed"}
+                  onClick={() => handleUpdateCondition("seller_signed")}
+                >
+                  Sign Agreement as Seller
+                </Button>
+              )}
+              {conditions.buyer_signed && conditions.seller_signed && !conditions.title_verified && (
+                <Button
+                  className="flex-1 gradient-cta text-primary-foreground font-semibold"
+                  disabled={updating === "title_verified"}
+                  onClick={() => handleUpdateCondition("title_verified")}
+                >
+                  Verify Title Transfer
+                </Button>
+              )}
+            </motion.div>
+          )}
+
+          {tx.status === "COMPLETED" && (
+            <motion.div
+              className="mt-4 md:mt-6 bg-accent/10 border border-accent/30 rounded-2xl p-6 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              <CheckCircle2 className="w-10 h-10 text-accent mx-auto mb-3" />
+              <h3 className="font-display font-bold text-foreground mb-1">Transaction Complete</h3>
+              <p className="text-sm text-muted-foreground">All conditions met. Funds released to seller.</p>
+            </motion.div>
+          )}
         </div>
       </main>
       <Footer />

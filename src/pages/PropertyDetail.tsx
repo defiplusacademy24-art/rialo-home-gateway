@@ -1,23 +1,62 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, ArrowLeft, Check, ChevronRight } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { USDTIcon, ETHIcon, USDCIcon } from "@/components/CryptoIcons";
 import { useAuth } from "@/contexts/AuthContext";
 import { TransactionService } from "@/services/TransactionService";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { PROPERTIES } from "@/data/properties";
+import ethLogo from "@/assets/eth-logo.png";
+import usdtLogo from "@/assets/usdt-logo.png";
+import usdcLogo from "@/assets/usdc-logo.png";
+
+const CURRENCIES = [
+  { key: "ETH", label: "ETH", sub: "Ethereum", logo: ethLogo, icon: <ETHIcon size={18} /> },
+  { key: "USDT", label: "USDT", sub: "Tether USD", logo: usdtLogo, icon: <USDTIcon size={18} /> },
+  { key: "USDC", label: "USDC", sub: "USD Coin", logo: usdcLogo, icon: <USDCIcon size={18} /> },
+] as const;
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [initiating, setInitiating] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<"ETH" | "USDT" | "USDC">("USDT");
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [balances, setBalances] = useState<Record<string, { eth: string; usdt: string; usdc: string }> | null>(null);
+  const [balancesLoading, setBalancesLoading] = useState(false);
+
   const property = PROPERTIES.find((p) => p.id === Number(id));
+
+  const fetchWalletAndBalances = useCallback(async () => {
+    if (!user) return;
+    const { data: wallet } = await supabase
+      .from("wallets")
+      .select("address")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (wallet) {
+      setWalletAddress(wallet.address);
+      setBalancesLoading(true);
+      try {
+        const { data } = await supabase.functions.invoke("get-wallet-balances", {
+          body: { address: wallet.address },
+        });
+        if (data) setBalances(data);
+      } catch {}
+      setBalancesLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchWalletAndBalances();
+  }, [fetchWalletAndBalances]);
 
   if (!property) {
     return (
@@ -37,6 +76,17 @@ const PropertyDetail = () => {
 
   const isLand = property.type === "Land";
   const isHotel = property.type === "Hotel";
+
+  // Get balance for selected currency on ethereum network
+  const getSelectedBalance = () => {
+    if (!balances) return null;
+    const ethNet = balances.ethereum;
+    if (!ethNet) return null;
+    const key = selectedCurrency.toLowerCase() as "eth" | "usdt" | "usdc";
+    return ethNet[key];
+  };
+
+  const selectedBalance = getSelectedBalance();
 
   return (
     <div className="min-h-screen bg-background">
@@ -160,15 +210,61 @@ const PropertyDetail = () => {
                 </Button>
               </div>
 
-              {/* Payment methods */}
+              {/* Payment Method Selection */}
               <div className="bg-card rounded-2xl border border-border p-6">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Accepted Payment</h3>
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground flex items-center gap-1.5"><USDTIcon size={18} /> USDT</span>
-                  <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground flex items-center gap-1.5"><USDCIcon size={18} /> USDC</span>
-                  <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground flex items-center gap-1.5"><ETHIcon size={18} /> ETH</span>
-                  <span className="px-4 py-2 rounded-full border border-border text-sm font-medium text-foreground">🏦 Bank Transfer</span>
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Select Payment Method</h3>
+                <div className="space-y-2">
+                  {CURRENCIES.map((c) => (
+                    <button
+                      key={c.key}
+                      onClick={() => setSelectedCurrency(c.key)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                        selectedCurrency === c.key
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                          : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <img src={c.logo} alt={c.key} className="w-8 h-8 rounded-full" />
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-semibold text-foreground">{c.label}</p>
+                        <p className="text-xs text-muted-foreground">{c.sub}</p>
+                      </div>
+                      {selectedCurrency === c.key && (
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <Check size={12} className="text-primary-foreground" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
                 </div>
+
+                {/* Wallet Balance */}
+                {user && (
+                  <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-border">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <Wallet size={14} className="text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Your {selectedCurrency} Balance</span>
+                      </div>
+                      <button
+                        onClick={fetchWalletAndBalances}
+                        disabled={balancesLoading}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <RefreshCw size={12} className={balancesLoading ? "animate-spin" : ""} />
+                      </button>
+                    </div>
+                    <p className="text-lg font-mono font-bold text-foreground">
+                      {balancesLoading ? (
+                        <span className="inline-block w-20 h-5 bg-muted rounded animate-pulse" />
+                      ) : walletAddress ? (
+                        `${selectedBalance ?? "0.00"} ${selectedCurrency}`
+                      ) : (
+                        <span className="text-sm text-muted-foreground font-normal">No wallet found</span>
+                      )}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* CTA */}
@@ -183,13 +279,12 @@ const PropertyDetail = () => {
                     }
                     setInitiating(true);
                     try {
-                      // Parse price as number
                       const amount = Number(property.priceNGN.replace(/,/g, ""));
                       const tx = await TransactionService.create({
                         property_id: property.id.toString(),
-                        seller_id: "00000000-0000-0000-0000-000000000000", // mock seller
+                        seller_id: "00000000-0000-0000-0000-000000000000",
                         amount,
-                        currency: "USDT",
+                        currency: selectedCurrency,
                       });
                       toast.success("Transaction initiated!");
                       navigate(`/transaction/${tx.id}`);
@@ -204,7 +299,7 @@ const PropertyDetail = () => {
                     }
                   }}
                 >
-                  {initiating ? "Initiating..." : "Initiate Purchase"}
+                  {initiating ? "Initiating..." : `Pay with ${selectedCurrency} — Initiate Purchase`}
                 </Button>
                 <Button variant="outline" className="w-full h-12 text-base">
                   Schedule Inspection
