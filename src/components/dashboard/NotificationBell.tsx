@@ -108,7 +108,7 @@ const NotificationBell = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-2 w-80 max-h-[420px] bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden"
+              className="fixed inset-x-3 top-14 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-80 max-h-[420px] bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden"
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <h3 className="text-sm font-display font-bold text-foreground">Notifications</h3>
