@@ -118,14 +118,16 @@ const Chat = () => {
     if (!newMessage.trim() || !user || !conversationKey) return;
     setSending(true);
     const otherUserId = sellerId === user.id ? messages.find(m => m.sender_id !== user.id)?.sender_id || sellerId : sellerId;
-    await supabase.from("chat_messages").insert({
+    const { error } = await supabase.from("chat_messages").insert({
       conversation_key: conversationKey,
       sender_id: user.id,
       receiver_id: otherUserId,
       property_id: propertyId,
       content: newMessage.trim(),
     });
-    setNewMessage("");
+    if (!error) {
+      setNewMessage("");
+    }
     setSending(false);
   };
 
