@@ -1,0 +1,1 @@
+ALTER TABLE public.property_transactions ADD COLUMN payment_proof_url text DEFAULT NULL;
