@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { USDTIcon, ETHIcon, USDCIcon } from "@/components/CryptoIcons";
 
 interface PropertyCardProps {
-  id: number;
+  id: number | string;
   image: string;
   title: string;
   location: string;

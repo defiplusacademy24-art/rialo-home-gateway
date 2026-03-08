@@ -5,7 +5,8 @@ import { useSearchParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
-import { PROPERTIES } from "@/data/properties";
+import { PROPERTIES, Property } from "@/data/properties";
+import { supabase } from "@/integrations/supabase/client";
 
 const LOCATIONS = ["All Locations", "Lagos", "Abuja", "Ibadan"];
 const TYPES = ["All Types", "House", "Apartment", "Villa", "Townhouse", "Land", "Hotel"];
@@ -26,6 +27,7 @@ const Properties = () => {
   const [type, setType] = useState("All Types");
   const [priceIdx, setPriceIdx] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [dbProperties, setDbProperties] = useState<Property[]>([]);
 
   useEffect(() => {
     const typeParam = searchParams.get("type");
@@ -35,9 +37,41 @@ const Properties = () => {
     }
   }, [searchParams]);
 
+  // Fetch published properties from database
+  useEffect(() => {
+    const fetchDbProperties = async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("status", "published");
+
+      if (error || !data) return;
+
+      // Fetch seller names for unique user_ids
+      const userIds = [...new Set(data.map((p) => p.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", userIds);
+
+      const nameMap = new Map(profiles?.map((pr) => [pr.user_id, pr.full_name]) || []);
+
+      const mapped = data.map((p) => mapDbProperty(p, nameMap.get(p.user_id) || null));
+      setDbProperties(mapped);
+    };
+
+    fetchDbProperties();
+  }, []);
+
+  const allProperties = useMemo(() => {
+    // Merge static + DB properties. DB properties use string UUIDs as id,
+    // so we prefix with a high number to avoid collisions with static ids.
+    return [...PROPERTIES, ...dbProperties];
+  }, [dbProperties]);
+
   const filtered = useMemo(() => {
     const range = PRICE_RANGES[priceIdx];
-    return PROPERTIES.filter((p) => {
+    return allProperties.filter((p) => {
       const matchSearch = p.title.toLowerCase().includes(search.toLowerCase()) || p.location.toLowerCase().includes(search.toLowerCase());
       const matchLocation = location === "All Locations" || p.location.includes(location);
       const matchType = type === "All Types" || p.type === type;
@@ -45,7 +79,7 @@ const Properties = () => {
       const matchPrice = price >= range.min && price <= range.max;
       return matchSearch && matchLocation && matchType && matchPrice;
     });
-  }, [search, location, type, priceIdx]);
+  }, [search, location, type, priceIdx, allProperties]);
 
   const activeFilters = (location !== "All Locations" ? 1 : 0) + (type !== "All Types" ? 1 : 0) + (priceIdx !== 0 ? 1 : 0);
 
@@ -187,3 +221,34 @@ const Properties = () => {
 };
 
 export default Properties;
+
+// Helper to map a DB property row into the Property shape used by PropertyCard
+function mapDbProperty(p: any, sellerName: string | null): Property {
+  const price = Number(p.price) || 0;
+  const formattedNGN = price.toLocaleString("en-NG");
+  const estimatedUSD = Math.round(price / 1600).toLocaleString("en-US");
+  const name = sellerName || "Seller";
+  const initials = name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+  const locationStr = [p.city, p.state].filter(Boolean).join(", ") || p.address || "Nigeria";
+  const firstImage = p.images && p.images.length > 0 ? p.images[0] : "/placeholder.svg";
+
+  const typeMap: Record<string, string> = {
+    house: "House", apartment: "Apartment", villa: "Villa",
+    townhouse: "Townhouse", land: "Land", hotel: "Hotel",
+  };
+
+  return {
+    id: p.id, // UUID string — works as key and for routing
+    image: firstImage,
+    title: p.title,
+    location: locationStr,
+    priceNGN: formattedNGN,
+    priceUSD: estimatedUSD,
+    bedrooms: p.bedrooms || 0,
+    bathrooms: p.bathrooms || 0,
+    sqft: p.area_sqft || 0,
+    type: typeMap[p.property_type?.toLowerCase()] || p.property_type || "House",
+    seller: { name, initials, rating: 5, transactions: 0, verified: false },
+    description: p.description || undefined,
+  };
+}

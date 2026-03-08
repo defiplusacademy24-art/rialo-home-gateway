@@ -14,7 +14,7 @@ export interface Seller {
 }
 
 export interface Property {
-  id: number;
+  id: number | string;
   image: string;
   title: string;
   location: string;
