@@ -1,4 +1,4 @@
-import { LayoutDashboard, Home, Receipt, Bookmark, Settings, ShieldCheck, ArrowLeft, Building2, Wallet, Landmark } from "lucide-react";
+import { LayoutDashboard, Home, Receipt, Bookmark, Settings, ShieldCheck, ArrowLeft, Building2, Wallet, Landmark, ArrowRightLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ const menuItems = [
   { id: "wallet", label: "Wallet", icon: Wallet },
   { id: "transactions", label: "My Transactions", icon: Receipt },
   { id: "bank-details", label: "Bank Details", icon: Landmark },
+  { id: "converter", label: "Converter", icon: ArrowRightLeft },
   { id: "saved", label: "Saved Properties", icon: Bookmark },
   { id: "kyc", label: "KYC Verification", icon: ShieldCheck },
   { id: "settings", label: "Settings", icon: Settings },
