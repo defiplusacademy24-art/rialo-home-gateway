@@ -227,7 +227,13 @@ const PropertyDetail = () => {
                           : "border-border hover:border-muted-foreground/30"
                       }`}
                     >
-                      <img src={c.logo} alt={c.key} className="w-8 h-8 rounded-full" />
+                      {c.logo ? (
+                        <img src={c.logo} alt={c.key} className="w-8 h-8 rounded-full" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+                          <Building2 size={16} className="text-amber-500" />
+                        </div>
+                      )}
                       <div className="flex-1 text-left">
                         <p className="text-sm font-semibold text-foreground">{c.label}</p>
                         <p className="text-xs text-muted-foreground">{c.sub}</p>
@@ -241,8 +247,8 @@ const PropertyDetail = () => {
                   ))}
                 </div>
 
-                {/* Wallet Balance */}
-                {user && (
+                {/* Wallet Balance - only for crypto */}
+                {user && selectedCurrency !== "BANK_TRANSFER" && (
                   <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-border">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
@@ -266,6 +272,12 @@ const PropertyDetail = () => {
                         <span className="text-sm text-muted-foreground font-normal">No wallet found</span>
                       )}
                     </p>
+                  </div>
+                )}
+
+                {selectedCurrency === "BANK_TRANSFER" && (
+                  <div className="mt-4 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                    <p className="text-xs text-muted-foreground">Pay via NGN bank transfer. You'll receive account details after initiating the transaction.</p>
                   </div>
                 )}
               </div>
@@ -308,7 +320,7 @@ const PropertyDetail = () => {
                     }
                   }}
                 >
-                  {initiating ? "Initiating..." : `Pay with ${selectedCurrency} — Initiate Purchase`}
+                  {initiating ? "Initiating..." : selectedCurrency === "BANK_TRANSFER" ? "Pay via Bank — Initiate Purchase" : `Pay with ${selectedCurrency} — Initiate Purchase`}
                 </Button>
                 <Button variant="outline" className="w-full h-12 text-base">
                   Schedule Inspection
