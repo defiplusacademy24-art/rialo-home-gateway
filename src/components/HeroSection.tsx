@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-house.jpg";
 
 const HeroSection = () => {
+  const { user } = useAuth();
   return (
     <section className="relative min-h-[90vh] flex items-center gradient-hero overflow-hidden pt-16">
       <div className="absolute inset-0">
