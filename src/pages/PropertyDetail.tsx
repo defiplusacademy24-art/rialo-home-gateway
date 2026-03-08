@@ -156,6 +156,7 @@ const PropertyDetail = () => {
 
   const isLand = property.type === "Land";
   const isHotel = property.type === "Hotel";
+  const isOwner = !!(user && property.sellerId && user.id === property.sellerId);
 
   // Get balance for selected currency on ethereum network
   const getSelectedBalance = () => {
