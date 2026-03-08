@@ -99,10 +99,10 @@ const Testimonial = () => {
             </p>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
               <Link
-                to="/signup"
+                to={user ? "/dashboard" : "/signup"}
                 className="inline-block px-6 py-3 rounded-lg gradient-cta text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-teal/20"
               >
-                Get Started
+                {user ? "Go to Dashboard" : "Get Started"}
               </Link>
             </motion.div>
           </div>
