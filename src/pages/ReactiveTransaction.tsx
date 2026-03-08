@@ -572,6 +572,101 @@ const ReactiveTransaction = () => {
                         <Building2 size={14} />
                         Transfer ₦{Number(tx.amount).toLocaleString()} to this account
                       </p>
+
+                      {/* Payment Proof Upload */}
+                      {isBuyer && tx.status !== "COMPLETED" && tx.status !== "CANCELLED" && (
+                        <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border space-y-3">
+                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <Upload size={14} />
+                            Upload Payment Proof
+                          </h4>
+                          <p className="text-xs text-muted-foreground">
+                            After making your bank transfer, upload a screenshot or receipt as proof of payment.
+                          </p>
+
+                          {proofUrl ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/30">
+                                <CheckCircle2 size={16} className="text-accent shrink-0" />
+                                <span className="text-sm text-foreground font-medium">Payment proof uploaded</span>
+                              </div>
+                              <a
+                                href={proofUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 text-xs text-primary hover:underline"
+                              >
+                                <ImageIcon size={12} />
+                                View uploaded proof
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <label className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors">
+                                <Upload size={20} className="text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">
+                                  {proofFile ? proofFile.name : "Click to select receipt image"}
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/*,.pdf"
+                                  className="hidden"
+                                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                                />
+                              </label>
+                              {proofFile && (
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 gradient-cta text-primary-foreground font-semibold"
+                                    disabled={proofUploading}
+                                    onClick={handleProofUpload}
+                                  >
+                                    {proofUploading ? (
+                                      <>
+                                        <RefreshCw size={14} className="animate-spin mr-1" />
+                                        Uploading...
+                                      </>
+                                    ) : (
+                                      "Upload Proof"
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setProofFile(null)}
+                                  >
+                                    <X size={14} />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Seller can view proof */}
+                      {!isBuyer && proofUrl && (
+                        <div className="mt-4 p-4 rounded-xl bg-accent/10 border border-accent/30 space-y-2">
+                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            <ImageIcon size={14} />
+                            Buyer's Payment Proof
+                          </h4>
+                          <a
+                            href={proofUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                          >
+                            <img
+                              src={proofUrl}
+                              alt="Payment proof"
+                              className="w-full max-h-48 object-contain rounded-lg border border-border"
+                            />
+                          </a>
+                          <p className="text-xs text-muted-foreground">Click image to view full size</p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
@@ -583,7 +678,7 @@ const ReactiveTransaction = () => {
               ) : (
                 <>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-display font-bold text-foreground">Wallet Balance</h3>
+                    <h3 className="text-base font-display font-bold text-foreground">Wallet & Payment</h3>
                     <button
                       onClick={() => tx?.currency && fetchWalletBalance(tx.currency)}
                       disabled={balanceLoading}
@@ -605,7 +700,52 @@ const ReactiveTransaction = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+
+                  {/* Crypto Confirm Payment Button */}
+                  {isBuyer && !conditions.payment_confirmed && tx.status !== "COMPLETED" && tx.status !== "CANCELLED" && (
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-xl bg-muted/30 border border-border">
+                        <p className="text-xs text-muted-foreground mb-1">Amount to send</p>
+                        <p className="text-lg font-mono font-bold text-foreground">
+                          ₦{Number(tx.amount).toLocaleString()} <span className="text-xs font-normal text-muted-foreground">in {tx.currency}</span>
+                        </p>
+                        {sellerWalletAddress && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            To: <span className="font-mono">{sellerWalletAddress.slice(0, 8)}...{sellerWalletAddress.slice(-6)}</span>
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        className="w-full gradient-cta text-primary-foreground font-semibold"
+                        disabled={cryptoProcessing || balanceLoading}
+                        onClick={handleCryptoConfirmPayment}
+                      >
+                        {cryptoProcessing ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin mr-2" />
+                            Processing Payment...
+                          </>
+                        ) : (
+                          <>
+                            <Wallet size={14} className="mr-2" />
+                            Confirm & Pay with {tx.currency}
+                          </>
+                        )}
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground text-center">
+                        {tx.currency} will be deducted from your wallet and locked in the smart contract
+                      </p>
+                    </div>
+                  )}
+
+                  {conditions.payment_confirmed && (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/30 mt-3">
+                      <CheckCircle2 size={16} className="text-accent shrink-0" />
+                      <span className="text-sm text-foreground font-medium">Payment confirmed & funds locked</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-3">
                     <Wallet size={14} />
                     <span>Payment method: {tx.currency}</span>
                   </div>
