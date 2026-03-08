@@ -8,6 +8,7 @@ import DashboardOverview from "@/components/dashboard/DashboardOverview";
 import SettingsTab from "@/components/dashboard/SettingsTab";
 import KycTab from "@/components/dashboard/KycTab";
 import PlaceholderTab from "@/components/dashboard/PlaceholderTab";
+import MyTransactionsTab from "@/components/dashboard/MyTransactionsTab";
 import ListPropertyTab from "@/components/dashboard/ListPropertyTab";
 import MyListingsTab from "@/components/dashboard/MyListingsTab";
 import WalletTab from "@/components/dashboard/WalletTab";
@@ -65,7 +66,7 @@ const Dashboard = () => {
       case "wallet":
         return <WalletTab />;
       case "transactions":
-        return <PlaceholderTab title="My Transactions" description="View and track your property transactions." />;
+        return <MyTransactionsTab />;
       case "saved":
         return <PlaceholderTab title="Saved Properties" description="Properties you've bookmarked will appear here." />;
       case "kyc":
