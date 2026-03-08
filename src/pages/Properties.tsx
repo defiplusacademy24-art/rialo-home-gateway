@@ -42,27 +42,22 @@ const Properties = () => {
     const fetchDbProperties = async () => {
       const { data, error } = await supabase
         .from("properties")
-        .select("*, profiles!inner(full_name)")
+        .select("*")
         .eq("status", "published");
 
-      if (error) {
-        // Fallback without join
-        const { data: fallback } = await supabase
-          .from("properties")
-          .select("*")
-          .eq("status", "published");
+      if (error || !data) return;
 
-        if (fallback) {
-          const mapped = fallback.map((p) => mapDbProperty(p, null));
-          setDbProperties(mapped);
-        }
-        return;
-      }
+      // Fetch seller names for unique user_ids
+      const userIds = [...new Set(data.map((p) => p.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", userIds);
 
-      if (data) {
-        const mapped = data.map((p: any) => mapDbProperty(p, p.profiles?.full_name));
-        setDbProperties(mapped);
-      }
+      const nameMap = new Map(profiles?.map((pr) => [pr.user_id, pr.full_name]) || []);
+
+      const mapped = data.map((p) => mapDbProperty(p, nameMap.get(p.user_id) || null));
+      setDbProperties(mapped);
     };
 
     fetchDbProperties();
