@@ -37,8 +37,67 @@ const PropertyDetail = () => {
   const [balances, setBalances] = useState<Record<string, { eth: string; usdt: string; usdc: string }> | null>(null);
   const [balancesLoading, setBalancesLoading] = useState(false);
   const { rates, loading: ratesLoading, convert } = useExchangeRates();
+  const [dbProperty, setDbProperty] = useState<any>(null);
+  const [dbLoading, setDbLoading] = useState(false);
 
-  const property = PROPERTIES.find((p) => p.id === Number(id));
+  // Try static lookup first
+  const staticProperty = PROPERTIES.find((p) => p.id === Number(id));
+
+  // Fetch from DB if not a static property (UUID id)
+  useEffect(() => {
+    if (staticProperty || !id) return;
+    setDbLoading(true);
+    const fetchProperty = async () => {
+      const { data } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (data) {
+        // Also fetch seller profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", data.user_id)
+          .maybeSingle();
+
+        const price = Number(data.price) || 0;
+        const formattedNGN = price.toLocaleString("en-NG");
+        const estimatedUSD = Math.round(price / 1600).toLocaleString("en-US");
+        const name = profile?.full_name || "Seller";
+        const initials = name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+        const locationStr = [data.city, data.state].filter(Boolean).join(", ") || data.address || "Nigeria";
+        const firstImage = data.images && data.images.length > 0 ? data.images[0] : "/placeholder.svg";
+        const typeMap: Record<string, string> = {
+          house: "House", apartment: "Apartment", villa: "Villa",
+          townhouse: "Townhouse", land: "Land", hotel: "Hotel",
+        };
+
+        setDbProperty({
+          id: data.id,
+          image: firstImage,
+          images: data.images || [],
+          title: data.title,
+          location: locationStr,
+          priceNGN: formattedNGN,
+          priceUSD: estimatedUSD,
+          bedrooms: data.bedrooms || 0,
+          bathrooms: data.bathrooms || 0,
+          sqft: data.area_sqft || 0,
+          type: typeMap[data.property_type?.toLowerCase()] || data.property_type || "House",
+          seller: { name, initials, rating: 5, transactions: 0, verified: false },
+          description: data.description || "No description provided.",
+          features: [],
+          sellerId: data.user_id,
+        });
+      }
+      setDbLoading(false);
+    };
+    fetchProperty();
+  }, [id, staticProperty]);
+
+  const property = staticProperty || dbProperty;
 
   // Get the NGN price as a number for conversion
   const priceNgn = property ? Number(property.priceNGN.replace(/,/g, "")) : 0;
@@ -66,6 +125,18 @@ const PropertyDetail = () => {
   useEffect(() => {
     fetchWalletAndBalances();
   }, [fetchWalletAndBalances]);
+
+  if (dbLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-24 pb-20 container mx-auto px-4 text-center">
+          <p className="text-muted-foreground">Loading property...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -247,7 +318,9 @@ const PropertyDetail = () => {
                   className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90"
                   onClick={() => {
                     if (!user) { navigate("/login"); return; }
-                    navigate(`/chat?propertyId=${property.id}&sellerId=seller_${property.id}`);
+                    // Use actual seller ID if available (from DB property), fallback for static
+                    const sellerId = property.sellerId || `seller_${property.id}`;
+                    navigate(`/chat?propertyId=${property.id}&sellerId=${sellerId}`);
                   }}
                 >
                   <MessageCircle size={16} /> Contact Seller
@@ -381,9 +454,11 @@ const PropertyDetail = () => {
                     setInitiating(true);
                     try {
                       const amount = Number(property.priceNGN.replace(/,/g, ""));
+                      // Use actual seller ID for DB properties, fallback UUID for static
+                      const sellerId = property.sellerId || "00000000-0000-0000-0000-000000000000";
                       const tx = await TransactionService.create({
                         property_id: property.id.toString(),
-                        seller_id: "00000000-0000-0000-0000-000000000000",
+                        seller_id: sellerId,
                         amount,
                         currency: selectedCurrency,
                       });
