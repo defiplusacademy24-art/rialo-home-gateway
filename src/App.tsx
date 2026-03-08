@@ -17,6 +17,7 @@ import Chat from "./pages/Chat";
 import VerifyToken from "./pages/VerifyToken";
 import ScheduleInspection from "./pages/ScheduleInspection";
 import NotFound from "./pages/NotFound";
+import SupportChatWidget from "./components/SupportChatWidget";
 
 const queryClient = new QueryClient();
 
