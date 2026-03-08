@@ -36,8 +36,12 @@ const PropertyDetail = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balances, setBalances] = useState<Record<string, { eth: string; usdt: string; usdc: string }> | null>(null);
   const [balancesLoading, setBalancesLoading] = useState(false);
+  const { rates, loading: ratesLoading, convert } = useExchangeRates();
 
   const property = PROPERTIES.find((p) => p.id === Number(id));
+
+  // Get the NGN price as a number for conversion
+  const priceNgn = property ? Number(property.priceNGN.replace(/,/g, "")) : 0;
 
   const fetchWalletAndBalances = useCallback(async () => {
     if (!user) return;
@@ -249,9 +253,40 @@ const PropertyDetail = () => {
                   ))}
                 </div>
 
+                {/* Live Conversion Display */}
+                {selectedCurrency !== "BANK_TRANSFER" && (
+                  <div className="mt-4 p-3 rounded-xl bg-muted/30 border border-border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ArrowRightLeft size={14} className="text-primary" />
+                      <span className="text-xs font-semibold text-foreground">Live Conversion</span>
+                      {ratesLoading && <span className="inline-block w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" />}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">₦{priceNgn.toLocaleString()}</span>
+                        <span className="text-sm font-mono font-bold text-foreground">
+                          {rates ? (
+                            `≈ ${convert(priceNgn, "NGN", selectedCurrency)?.toLocaleString(undefined, {
+                              minimumFractionDigits: selectedCurrency === "ETH" ? 6 : 2,
+                              maximumFractionDigits: selectedCurrency === "ETH" ? 6 : 2,
+                            })} ${selectedCurrency}`
+                          ) : (
+                            "..."
+                          )}
+                        </span>
+                      </div>
+                      {rates && (
+                        <p className="text-[10px] text-muted-foreground">
+                          1 {selectedCurrency} ≈ ₦{(rates as any)[selectedCurrency]?.ngn?.toLocaleString() || "—"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Wallet Balance - only for crypto */}
                 {user && selectedCurrency !== "BANK_TRANSFER" && (
-                  <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-border">
+                  <div className="mt-3 p-3 rounded-xl bg-muted/50 border border-border">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <Wallet size={14} className="text-muted-foreground" />
