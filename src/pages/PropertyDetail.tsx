@@ -343,7 +343,7 @@ const PropertyDetail = () => {
 
                 {selectedCurrency === "BANK_TRANSFER" && (
                   <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/20">
-                    <p className="text-xs text-muted-foreground">Pay via NGN bank transfer. Seller's bank account details will be displayed after you initiate the transaction.</p>
+                    <p className="text-xs text-muted-foreground">Pay securely via Paystack. You'll be redirected to complete payment after initiating the transaction.</p>
                   </div>
                 )}
               </div>
@@ -400,7 +400,7 @@ const PropertyDetail = () => {
                     }
                   }}
                 >
-                  {initiating ? "Initiating..." : selectedCurrency === "BANK_TRANSFER" ? "Pay via Bank — Initiate Purchase" : `Pay with ${selectedCurrency} — Initiate Purchase`}
+                  {initiating ? "Initiating..." : selectedCurrency === "BANK_TRANSFER" ? "Pay via Paystack — Initiate Purchase" : `Pay with ${selectedCurrency} — Initiate Purchase`}
                 </Button>
                 <Button variant="outline" className="w-full h-12 text-base">
                   Schedule Inspection

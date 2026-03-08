@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, Clock, CheckCircle2, Copy, ChevronRight, Circle,
   FileText, Home as HomeIcon, AlertCircle, Wallet, RefreshCw, Building2,
-  Upload, Image as ImageIcon, X
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,10 +54,7 @@ const ReactiveTransaction = () => {
   const [countdown, setCountdown] = useState("");
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
-  const [sellerBank, setSellerBank] = useState<{ bank_name: string; account_name: string; account_number: string } | null>(null);
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [proofUploading, setProofUploading] = useState(false);
-  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [paystackLoading, setPaystackLoading] = useState(false);
   const [sellerWalletAddress, setSellerWalletAddress] = useState<string | null>(null);
   const [cryptoProcessing, setCryptoProcessing] = useState(false);
 
@@ -100,15 +97,6 @@ const ReactiveTransaction = () => {
     setBalanceLoading(false);
   }, [user]);
 
-  // Fetch seller bank details for bank transfer transactions
-  const fetchSellerBank = useCallback(async (sellerId: string) => {
-    const { data } = await supabase
-      .from("bank_details")
-      .select("bank_name, account_name, account_number")
-      .eq("user_id", sellerId)
-      .maybeSingle();
-    if (data) setSellerBank(data);
-  }, []);
 
   useEffect(() => {
     fetchTransaction();
@@ -125,55 +113,59 @@ const ReactiveTransaction = () => {
   }, []);
 
   useEffect(() => {
-    if (tx?.currency === "BANK_TRANSFER" && tx?.seller_id) {
-      fetchSellerBank(tx.seller_id);
-    } else if (tx?.currency && tx?.seller_id) {
+    if (tx?.currency && tx?.currency !== "BANK_TRANSFER" && tx?.seller_id) {
       fetchWalletBalance(tx.currency);
       fetchSellerWallet(tx.seller_id);
     }
-  }, [tx?.currency, tx?.seller_id, fetchWalletBalance, fetchSellerBank, fetchSellerWallet]);
+  }, [tx?.currency, tx?.seller_id, fetchWalletBalance, fetchSellerWallet]);
 
-  // Set proof URL from transaction data
-  useEffect(() => {
-    if (tx && (tx as any).payment_proof_url) {
-      setProofUrl((tx as any).payment_proof_url);
-    }
-  }, [tx]);
-
-  // Upload payment proof for bank transfers
-  const handleProofUpload = async () => {
-    if (!proofFile || !tx || !user) return;
-    setProofUploading(true);
+  // Paystack: initiate payment for bank transfer
+  const handlePaystackPayment = async () => {
+    if (!tx || !user) return;
+    setPaystackLoading(true);
     try {
-      const fileExt = proofFile.name.split(".").pop();
-      const filePath = `payment-proofs/${tx.id}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("property-files")
-        .upload(filePath, proofFile);
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("property-files")
-        .getPublicUrl(filePath);
-
-      const publicUrl = urlData.publicUrl;
-
-      // Update transaction with proof URL
-      const { error: updateError } = await supabase
-        .from("property_transactions")
-        .update({ payment_proof_url: publicUrl } as any)
-        .eq("id", tx.id);
-      if (updateError) throw updateError;
-
-      setProofUrl(publicUrl);
-      setProofFile(null);
-      toast.success("Payment proof uploaded successfully!");
+      const callbackUrl = `${window.location.origin}/transaction/${tx.id}?paystack_verify=true`;
+      const { data, error } = await supabase.functions.invoke("paystack-initialize", {
+        body: { transaction_id: tx.id, callback_url: callbackUrl },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.authorization_url) {
+        window.location.href = data.authorization_url;
+      }
     } catch (err: any) {
-      toast.error(err.message || "Failed to upload proof");
+      toast.error(err.message || "Failed to initialize payment");
     }
-    setProofUploading(false);
+    setPaystackLoading(false);
   };
+
+  // Verify Paystack payment on callback redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shouldVerify = params.get("paystack_verify");
+    const reference = params.get("reference") || params.get("trxref");
+    if (shouldVerify && reference && tx && !tx.conditions.payment_confirmed) {
+      const verify = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke("paystack-verify", {
+            body: { reference, transaction_id: tx.id },
+          });
+          if (error) throw error;
+          if (data?.verified) {
+            toast.success("Payment verified successfully! Funds locked in smart contract.");
+            fetchTransaction();
+          } else {
+            toast.error(data?.message || "Payment verification failed");
+          }
+        } catch (err: any) {
+          toast.error(err.message || "Verification failed");
+        }
+        // Clean URL
+        window.history.replaceState({}, "", `/transaction/${tx.id}`);
+      };
+      verify();
+    }
+  }, [tx?.id, tx?.conditions?.payment_confirmed]);
 
   // Crypto payment: confirm and simulate deduction
   const handleCryptoConfirmPayment = async () => {
@@ -537,161 +529,50 @@ const ReactiveTransaction = () => {
             >
               {tx.currency === "BANK_TRANSFER" ? (
                 <>
-                  <h3 className="text-base font-display font-bold text-foreground mb-4">Seller Bank Details</h3>
-                  {sellerBank ? (
+                  <h3 className="text-base font-display font-bold text-foreground mb-4">Bank Payment via Paystack</h3>
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border mb-4">
+                    <img src={nairaLogo} alt="NGN" className="w-10 h-10 rounded-full" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Amount</p>
+                      <p className="text-xl font-mono font-bold text-foreground">₦{Number(tx.amount).toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  {conditions.payment_confirmed ? (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/30">
+                      <CheckCircle2 size={16} className="text-accent shrink-0" />
+                      <span className="text-sm text-foreground font-medium">Payment confirmed via Paystack</span>
+                    </div>
+                  ) : isBuyer && tx.status !== "COMPLETED" && tx.status !== "CANCELLED" ? (
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
-                        <img src={nairaLogo} alt="NGN" className="w-10 h-10 rounded-full" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground">Bank Name</p>
-                          <p className="text-sm font-semibold text-foreground">{sellerBank.bank_name}</p>
-                        </div>
-                      </div>
-                      <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-2">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Account Name</p>
-                          <p className="text-sm font-semibold text-foreground">{sellerBank.account_name}</p>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Account Number</p>
-                            <p className="text-lg font-mono font-bold text-foreground">{sellerBank.account_number}</p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(sellerBank.account_number);
-                              toast.success("Account number copied");
-                            }}
-                            className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                          >
-                            <Copy size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <Building2 size={14} />
-                        Transfer ₦{Number(tx.amount).toLocaleString()} to this account
+                      <p className="text-sm text-muted-foreground">
+                        Pay securely via Paystack. You'll be redirected to complete payment, then returned here automatically.
                       </p>
-
-                      {/* Payment Proof Upload */}
-                      {isBuyer && tx.status !== "COMPLETED" && tx.status !== "CANCELLED" && (
-                        <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border space-y-3">
-                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                            <Upload size={14} />
-                            Upload Payment Proof
-                          </h4>
-                          <p className="text-xs text-muted-foreground">
-                            After making your bank transfer, upload a screenshot or receipt as proof of payment.
-                          </p>
-
-                          {proofUrl ? (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/30">
-                                <CheckCircle2 size={16} className="text-accent shrink-0" />
-                                <span className="text-sm text-foreground font-medium">Payment proof uploaded</span>
-                              </div>
-                              <a
-                                href={proofUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-xs text-primary hover:underline"
-                              >
-                                <ImageIcon size={12} />
-                                View uploaded proof
-                              </a>
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <label className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors">
-                                <Upload size={20} className="text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">
-                                  {proofFile ? proofFile.name : "Click to select receipt image"}
-                                </span>
-                                <input
-                                  type="file"
-                                  accept="image/*,.pdf"
-                                  className="hidden"
-                                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                                />
-                              </label>
-                              {proofFile && (
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="flex-1 gradient-cta text-primary-foreground font-semibold"
-                                    disabled={proofUploading}
-                                    onClick={handleProofUpload}
-                                  >
-                                    {proofUploading ? (
-                                      <>
-                                        <RefreshCw size={14} className="animate-spin mr-1" />
-                                        Uploading...
-                                      </>
-                                    ) : (
-                                      "Upload Proof"
-                                    )}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setProofFile(null)}
-                                  >
-                                    <X size={14} />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Seller can view proof and confirm payment */}
-                      {!isBuyer && proofUrl && (
-                        <div className="mt-4 p-4 rounded-xl bg-accent/10 border border-accent/30 space-y-2">
-                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                            <ImageIcon size={14} />
-                            Buyer's Payment Proof
-                          </h4>
-                          <a
-                            href={proofUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block"
-                          >
-                            <img
-                              src={proofUrl}
-                              alt="Payment proof"
-                              className="w-full max-h-48 object-contain rounded-lg border border-border"
-                            />
-                          </a>
-                          <p className="text-xs text-muted-foreground">Click image to view full size</p>
-                          {!conditions.payment_confirmed && (
-                            <Button
-                              size="sm"
-                              className="w-full gradient-cta text-primary-foreground font-semibold mt-2"
-                              disabled={updating === "payment_confirmed"}
-                              onClick={() => handleUpdateCondition("payment_confirmed")}
-                            >
-                              {updating === "payment_confirmed" ? (
-                                <>
-                                  <RefreshCw size={14} className="animate-spin mr-1" />
-                                  Confirming...
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 size={14} className="mr-1" />
-                                  Confirm Payment Received
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      )}
+                      <Button
+                        className="w-full gradient-cta text-primary-foreground font-semibold h-11"
+                        disabled={paystackLoading}
+                        onClick={handlePaystackPayment}
+                      >
+                        {paystackLoading ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin mr-2" />
+                            Redirecting to Paystack...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard size={14} className="mr-2" />
+                            Pay ₦{Number(tx.amount).toLocaleString()} with Paystack
+                          </>
+                        )}
+                      </Button>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <ShieldCheck size={14} />
+                        <span>Secured by Paystack. Payment auto-confirms on success.</span>
+                      </div>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
-                      <Building2 size={24} className="text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Seller has not added bank details yet.</p>
+                    <div className="p-3 rounded-xl bg-muted/30 border border-border">
+                      <p className="text-sm text-muted-foreground">Awaiting buyer's payment via Paystack.</p>
                     </div>
                   )}
                 </>
