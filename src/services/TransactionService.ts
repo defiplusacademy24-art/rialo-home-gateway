@@ -29,6 +29,7 @@ export const TRANSACTION_STATUSES = [
   "TITLE_VERIFICATION",
   "SETTLEMENT_EXECUTION",
   "COMPLETED",
+  "CANCELLED",
 ] as const;
 
 export class TransactionService {
