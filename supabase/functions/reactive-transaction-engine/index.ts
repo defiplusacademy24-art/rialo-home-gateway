@@ -122,6 +122,18 @@ Deno.serve(async (req) => {
 
         if (updateError) throw updateError;
 
+        // Notify seller about the new transaction
+        try {
+          const paymentLabel = (currency || "USDT") === "BANK_TRANSFER" ? "Bank Transfer (NGN)" : (currency || "USDT");
+          await supabase.from("notifications").insert({
+            user_id: seller_id,
+            title: "New Purchase Initiated",
+            message: `A buyer has initiated a ${paymentLabel} transaction of ₦${Number(amount).toLocaleString()} for your property. Contract: ${contractId}`,
+            type: (currency || "USDT") === "BANK_TRANSFER" ? "bank_transfer" : "transaction",
+            metadata: { transaction_id: data.id, property_id, currency: currency || "USDT" },
+          });
+        } catch (_) { /* non-critical */ }
+
         return new Response(JSON.stringify(updated), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
