@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-house.jpg";
 
 const HeroSection = () => {
+  const { user } = useAuth();
   return (
     <section className="relative min-h-[90vh] flex items-center gradient-hero overflow-hidden pt-16">
       <div className="absolute inset-0">
@@ -46,8 +48,8 @@ const HeroSection = () => {
               <Link to="/properties" className="px-6 py-3 rounded-lg gradient-cta text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-teal/25 hover:scale-105 transition-transform duration-200">
                 Explore Properties
               </Link>
-              <Link to="/signup" className="px-6 py-3 rounded-lg border border-white/30 text-primary-foreground font-semibold hover:bg-white/10 transition-colors hover:scale-105 transition-transform duration-200">
-                Get Started
+              <Link to={user ? "/dashboard" : "/signup"} className="px-6 py-3 rounded-lg border border-white/30 text-primary-foreground font-semibold hover:bg-white/10 transition-colors hover:scale-105 transition-transform duration-200">
+                {user ? "Dashboard" : "Get Started"}
               </Link>
             </motion.div>
 
