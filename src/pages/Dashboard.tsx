@@ -13,6 +13,7 @@ import ListPropertyTab from "@/components/dashboard/ListPropertyTab";
 import MyListingsTab from "@/components/dashboard/MyListingsTab";
 import WalletTab from "@/components/dashboard/WalletTab";
 import MyAssetsTab from "@/components/dashboard/MyAssetsTab";
+import MyInspectionsTab from "@/components/dashboard/MyInspectionsTab";
 import BankDetailsTab from "@/components/dashboard/BankDetailsTab";
 import CurrencyConverterTab from "@/components/dashboard/CurrencyConverterTab";
 import ChatList from "@/pages/ChatList";
@@ -79,6 +80,8 @@ const Dashboard = () => {
         return <CurrencyConverterTab />;
       case "messages":
         return <ChatList />;
+      case "inspections":
+        return <MyInspectionsTab />;
       case "saved":
         return <PlaceholderTab title="Saved Properties" description="Properties you've bookmarked will appear here." />;
       case "kyc":
