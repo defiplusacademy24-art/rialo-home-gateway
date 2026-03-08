@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ethers } from "ethers";
@@ -11,6 +11,16 @@ interface WalletData {
   encrypted_private_key: string;
 }
 
+interface NetworkBalances {
+  eth: string;
+  usdt: string;
+}
+
+interface Balances {
+  ethereum: NetworkBalances;
+  base: NetworkBalances;
+}
+
 const WalletTab = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -19,10 +29,27 @@ const WalletTab = () => {
   const [generating, setGenerating] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [balances, setBalances] = useState<Balances | null>(null);
+  const [balancesLoading, setBalancesLoading] = useState(false);
+  const [activeNetwork, setActiveNetwork] = useState<"ethereum" | "base">("ethereum");
 
   useEffect(() => {
     fetchWallet();
   }, [user]);
+
+  const fetchBalances = useCallback(async (address: string) => {
+    setBalancesLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-wallet-balances", {
+        body: { address },
+      });
+      if (error) throw error;
+      setBalances(data);
+    } catch {
+      // silently fail, balances show as --
+    }
+    setBalancesLoading(false);
+  }, []);
 
   const fetchWallet = async () => {
     if (!user) return;
@@ -32,7 +59,10 @@ const WalletTab = () => {
       .select("address, encrypted_private_key")
       .eq("user_id", user.id)
       .maybeSingle();
-    if (data) setWallet(data);
+    if (data) {
+      setWallet(data);
+      fetchBalances(data.address);
+    }
     setLoading(false);
   };
 
@@ -48,6 +78,7 @@ const WalletTab = () => {
       });
       if (error) throw error;
       setWallet({ address: newWallet.address, encrypted_private_key: newWallet.privateKey });
+      fetchBalances(newWallet.address);
       toast({ title: "Wallet created!", description: "Your EVM wallet has been generated successfully." });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -64,6 +95,8 @@ const WalletTab = () => {
 
   const truncateAddress = (addr: string) =>
     `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+
+  const currentBalances = balances?.[activeNetwork];
 
   if (loading) {
     return (
@@ -121,15 +154,78 @@ const WalletTab = () => {
         <p className="text-muted-foreground mt-1">Manage your crypto wallet and payment methods.</p>
       </div>
 
+      {/* Network Switcher */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setActiveNetwork("ethereum")}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            activeNetwork === "ethereum"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Ethereum
+        </button>
+        <button
+          onClick={() => setActiveNetwork("base")}
+          className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            activeNetwork === "base"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Base
+        </button>
+      </div>
+
       {/* Wallet Card */}
       <div className="rounded-2xl gradient-cta p-6 text-primary-foreground relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-6">
-            <Wallet className="w-5 h-5" />
-            <span className="text-sm font-medium opacity-80">EVM Wallet</span>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Wallet className="w-5 h-5" />
+              <span className="text-sm font-medium opacity-80">
+                {activeNetwork === "ethereum" ? "Ethereum Mainnet" : "Base Network"}
+              </span>
+            </div>
+            <button
+              onClick={() => fetchBalances(wallet.address)}
+              disabled={balancesLoading}
+              className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              title="Refresh balances"
+            >
+              <RefreshCw className={`w-4 h-4 ${balancesLoading ? "animate-spin" : ""}`} />
+            </button>
           </div>
+
+          {/* Balances */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-white/10 rounded-xl p-4">
+              <p className="text-xs opacity-60 mb-1">ETH Balance</p>
+              <p className="text-xl font-mono font-bold">
+                {balancesLoading ? (
+                  <span className="inline-block w-20 h-6 bg-white/20 rounded animate-pulse" />
+                ) : (
+                  currentBalances?.eth ?? "--"
+                )}
+              </p>
+              <p className="text-xs opacity-60 mt-1">Ether</p>
+            </div>
+            <div className="bg-white/10 rounded-xl p-4">
+              <p className="text-xs opacity-60 mb-1">USDT Balance</p>
+              <p className="text-xl font-mono font-bold">
+                {balancesLoading ? (
+                  <span className="inline-block w-20 h-6 bg-white/20 rounded animate-pulse" />
+                ) : (
+                  currentBalances?.usdt ?? "--"
+                )}
+              </p>
+              <p className="text-xs opacity-60 mt-1">Tether USD</p>
+            </div>
+          </div>
+
           <div className="mb-4">
             <p className="text-xs opacity-60 mb-1">Wallet Address</p>
             <div className="flex items-center gap-2">
@@ -144,11 +240,15 @@ const WalletTab = () => {
                 {copied === "Address" ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
               <a
-                href={`https://etherscan.io/address/${wallet.address}`}
+                href={
+                  activeNetwork === "ethereum"
+                    ? `https://etherscan.io/address/${wallet.address}`
+                    : `https://basescan.org/address/${wallet.address}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                title="View on Etherscan"
+                title={activeNetwork === "ethereum" ? "View on Etherscan" : "View on BaseScan"}
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
@@ -215,7 +315,6 @@ const WalletTab = () => {
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {/* Crypto - USDT */}
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
               <span className="text-lg font-bold text-emerald-500">₮</span>
@@ -227,7 +326,6 @@ const WalletTab = () => {
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
           </div>
 
-          {/* Crypto - ETH */}
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
               <span className="text-lg font-bold text-blue-500">Ξ</span>
@@ -239,7 +337,6 @@ const WalletTab = () => {
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
           </div>
 
-          {/* Bank Card */}
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5 text-primary" />
@@ -251,7 +348,6 @@ const WalletTab = () => {
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
           </div>
 
-          {/* Bank Transfer */}
           <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
             <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
               <span className="text-lg font-bold text-amber-500">₦</span>
@@ -279,7 +375,7 @@ const WalletTab = () => {
           </li>
           <li className="flex items-start gap-3">
             <Shield className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-            All crypto transactions are verified on the Ethereum blockchain.
+            All crypto transactions are verified on the Ethereum and Base blockchains.
           </li>
           <li className="flex items-start gap-3">
             <CreditCard className="w-4 h-4 text-primary mt-0.5 shrink-0" />
