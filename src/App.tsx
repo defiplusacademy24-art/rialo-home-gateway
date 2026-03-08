@@ -43,6 +43,7 @@ const App = () => (
             <Route path="/schedule-inspection" element={<ScheduleInspection />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <SupportChatWidget />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
