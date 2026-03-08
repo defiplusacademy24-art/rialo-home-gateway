@@ -26,7 +26,6 @@ const testimonials = [
 ];
 
 const Testimonial = () => {
-const Testimonial = () => {
   const { user } = useAuth();
   return (
     <section className="py-20 bg-background">
