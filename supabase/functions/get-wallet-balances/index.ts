@@ -5,21 +5,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// USDT contract addresses
 const USDT_CONTRACTS: Record<string, string> = {
   ethereum: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-  base: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2', // USDT on Base
+  base: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
 };
 
-// Public RPC endpoints
+const USDC_CONTRACTS: Record<string, string> = {
+  ethereum: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+};
+
 const RPC_URLS: Record<string, string> = {
   ethereum: 'https://eth.llamarpc.com',
   base: 'https://mainnet.base.org',
 };
 
 const ERC20_BALANCE_OF = '0x70a08231';
-const ERC20_DECIMALS_ETH_USDT = 6;
-const ERC20_DECIMALS_BASE_USDT = 6;
 
 async function getEthBalance(rpcUrl: string, address: string): Promise<string> {
   const res = await fetch(rpcUrl, {
@@ -67,17 +68,18 @@ serve(async (req) => {
       });
     }
 
-    // Fetch all balances in parallel
-    const [ethBalance, ethUsdt, baseEth, baseUsdt] = await Promise.all([
+    const [ethBalance, ethUsdt, ethUsdc, baseEth, baseUsdt, baseUsdc] = await Promise.all([
       getEthBalance(RPC_URLS.ethereum, address).catch(() => '0.000000'),
-      getTokenBalance(RPC_URLS.ethereum, USDT_CONTRACTS.ethereum, address, ERC20_DECIMALS_ETH_USDT).catch(() => '0.00'),
+      getTokenBalance(RPC_URLS.ethereum, USDT_CONTRACTS.ethereum, address, 6).catch(() => '0.00'),
+      getTokenBalance(RPC_URLS.ethereum, USDC_CONTRACTS.ethereum, address, 6).catch(() => '0.00'),
       getEthBalance(RPC_URLS.base, address).catch(() => '0.000000'),
-      getTokenBalance(RPC_URLS.base, USDT_CONTRACTS.base, address, ERC20_DECIMALS_BASE_USDT).catch(() => '0.00'),
+      getTokenBalance(RPC_URLS.base, USDT_CONTRACTS.base, address, 6).catch(() => '0.00'),
+      getTokenBalance(RPC_URLS.base, USDC_CONTRACTS.base, address, 6).catch(() => '0.00'),
     ]);
 
     return new Response(JSON.stringify({
-      ethereum: { eth: ethBalance, usdt: ethUsdt },
-      base: { eth: baseEth, usdt: baseUsdt },
+      ethereum: { eth: ethBalance, usdt: ethUsdt, usdc: ethUsdc },
+      base: { eth: baseEth, usdt: baseUsdt, usdc: baseUsdc },
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
