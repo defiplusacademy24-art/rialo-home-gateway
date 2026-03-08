@@ -8,8 +8,9 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, Clock, CheckCircle2, Copy, ChevronRight, Circle,
   FileText, Home as HomeIcon, AlertCircle, Wallet, RefreshCw, Building2,
-  CreditCard
+  CreditCard, Download
 } from "lucide-react";
+import { downloadReceipt, ReceiptData } from "@/utils/generateReceipt";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { USDTIcon, USDCIcon, ETHIcon } from "@/components/CryptoIcons";
@@ -760,7 +761,26 @@ const ReactiveTransaction = () => {
             >
               <CheckCircle2 className="w-10 h-10 text-accent mx-auto mb-3" />
               <h3 className="font-display font-bold text-foreground mb-1">Transaction Complete</h3>
-              <p className="text-sm text-muted-foreground">All conditions met. Funds released to seller.</p>
+              <p className="text-sm text-muted-foreground mb-4">All conditions met. Funds released to seller.</p>
+              <Button
+                className="gradient-cta text-primary-foreground font-semibold"
+                onClick={() => {
+                  const receiptData: ReceiptData = {
+                    contractId: tx.contract_id,
+                    propertyId: tx.property_id,
+                    buyerId: tx.buyer_id,
+                    sellerId: tx.seller_id,
+                    amount: tx.amount,
+                    currency: tx.currency,
+                    status: tx.status,
+                    completedAt: tx.updated_at,
+                  };
+                  downloadReceipt(receiptData);
+                }}
+              >
+                <Download size={16} className="mr-2" />
+                Download Proof of Payment (PDF)
+              </Button>
             </motion.div>
           )}
 
