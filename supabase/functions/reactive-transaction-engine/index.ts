@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
       if (action === "list") {
         const { data, error } = await supabase
           .from("property_transactions")
-          .select("*, properties(title, city, state, images, price, property_type)")
+          .select("*")
           .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
           .order("created_at", { ascending: false });
 
@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
         const { transaction_id } = body;
         const { data, error } = await supabase
           .from("property_transactions")
-          .select("*, properties(title, city, state, images, price, property_type, currency)")
+          .select("*")
           .eq("id", transaction_id)
           .single();
 
