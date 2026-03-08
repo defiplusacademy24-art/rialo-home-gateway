@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2, ArrowRightLeft, Settings } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2, ArrowRightLeft, Settings, FileText, Download, ImageIcon } from "lucide-react";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -270,6 +270,51 @@ const PropertyDetail = () => {
                         <Check size={16} className="text-accent shrink-0" />
                         <span>{feature}</span>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Property Documents */}
+              {property.documents && property.documents.length > 0 && (
+                <div className="bg-card rounded-2xl border border-border p-6 md:p-8">
+                  <h2 className="text-lg font-display font-bold text-foreground mb-4">Property Documents</h2>
+                  <div className="space-y-2">
+                    {property.documents.map((doc: string, idx: number) => {
+                      const fileName = doc.split("/").pop() || `Document ${idx + 1}`;
+                      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(doc);
+                      return (
+                        <a
+                          key={idx}
+                          href={doc}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors group"
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            {isImage ? <ImageIcon size={18} className="text-primary" /> : <FileText size={18} className="text-primary" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{isImage ? `Photo ${idx + 1}` : fileName}</p>
+                            <p className="text-xs text-muted-foreground">{isImage ? "Image" : "Document"}</p>
+                          </div>
+                          <Download size={16} className="text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Property Images Gallery */}
+              {property.images && property.images.length > 1 && (
+                <div className="bg-card rounded-2xl border border-border p-6 md:p-8">
+                  <h2 className="text-lg font-display font-bold text-foreground mb-4">More Photos</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {property.images.map((img: string, idx: number) => (
+                      <a key={idx} href={img} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-border hover:shadow-md transition-shadow">
+                        <img src={img} alt={`Property photo ${idx + 1}`} className="w-full h-32 object-cover" />
+                      </a>
                     ))}
                   </div>
                 </div>

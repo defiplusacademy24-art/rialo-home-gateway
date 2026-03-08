@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useSearchParams, Link, useNavigate } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { PROPERTIES } from "@/data/properties";
@@ -32,9 +32,26 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sellerProfile, setSellerProfile] = useState<{ full_name: string | null } | null>(null);
+  const [dbPropertyTitle, setDbPropertyTitle] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const property = PROPERTIES.find((p) => p.id === Number(propertyId));
+  // Try static lookup first
+  const staticProperty = PROPERTIES.find((p) => p.id === Number(propertyId));
+
+  // Fetch DB property title if not static
+  useEffect(() => {
+    if (staticProperty || !propertyId) return;
+    supabase
+      .from("properties")
+      .select("title")
+      .eq("id", propertyId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setDbPropertyTitle(data.title);
+      });
+  }, [propertyId, staticProperty]);
+
+  const propertyTitle = staticProperty?.title || dbPropertyTitle;
 
   // Build a stable conversation key (sorted user IDs + property)
   const conversationKey = user
@@ -140,7 +157,7 @@ const Chat = () => {
 
   if (loading || !user) return null;
 
-  const otherName = sellerProfile?.full_name || property?.seller?.name || "User";
+  const otherName = sellerProfile?.full_name || staticProperty?.seller?.name || "User";
   const otherInitials = otherName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
 
   return (
@@ -159,13 +176,13 @@ const Chat = () => {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-foreground text-sm truncate">{otherName}</p>
-            {property && (
+            {propertyTitle && (
               <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                <Building2 className="w-3 h-3" /> {property.title}
+                <Building2 className="w-3 h-3" /> {propertyTitle}
               </p>
             )}
           </div>
-          {property && (
+          {propertyId && (
             <Link to={`/property/${propertyId}`}>
               <Button variant="outline" size="sm" className="text-xs">View Property</Button>
             </Link>
@@ -177,9 +194,9 @@ const Chat = () => {
           {messages.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-sm">No messages yet. Start the conversation!</p>
-              {property && (
+              {propertyTitle && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Regarding: {property.title} — ₦{property.priceNGN}
+                  Regarding: {propertyTitle}
                 </p>
               )}
             </div>

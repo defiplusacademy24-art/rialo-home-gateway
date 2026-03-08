@@ -17,6 +17,7 @@ interface ConversationSummary {
   last_message: string;
   last_time: string;
   unread_count: number;
+  property_title?: string;
 }
 
 const ChatList = () => {
@@ -49,12 +50,17 @@ const ChatList = () => {
         convMap.get(m.conversation_key)!.push(m);
       });
 
-      // Get unique other user IDs
+      // Get unique other user IDs and property IDs
       const otherIds = new Set<string>();
+      const dbPropertyIds = new Set<string>();
       convMap.forEach((msgs) => {
         msgs.forEach((m: any) => {
           if (m.sender_id !== user.id) otherIds.add(m.sender_id);
           if (m.receiver_id !== user.id) otherIds.add(m.receiver_id);
+          // If property_id is a UUID (not a number), it's a DB property
+          if (m.property_id && isNaN(Number(m.property_id))) {
+            dbPropertyIds.add(m.property_id);
+          }
         });
       });
 
@@ -68,11 +74,26 @@ const ChatList = () => {
         profiles?.forEach((p: any) => profileMap.set(p.user_id, p.full_name || "User"));
       }
 
+      // Fetch DB property titles
+      const propTitleMap = new Map<string, string>();
+      if (dbPropertyIds.size > 0) {
+        const { data: props } = await supabase
+          .from("properties")
+          .select("id, title")
+          .in("id", Array.from(dbPropertyIds));
+        props?.forEach((p: any) => propTitleMap.set(p.id, p.title));
+      }
+
       const summaries: ConversationSummary[] = [];
       convMap.forEach((msgs, key) => {
         const latest = msgs[0];
         const otherId = latest.sender_id === user.id ? latest.receiver_id : latest.sender_id;
         const unread = msgs.filter((m: any) => m.receiver_id === user.id && !m.is_read).length;
+        
+        // Try static property first, then DB
+        const staticProp = PROPERTIES.find((p) => p.id === Number(latest.property_id));
+        const propTitle = staticProp?.title || propTitleMap.get(latest.property_id) || undefined;
+
         summaries.push({
           conversation_key: key,
           property_id: latest.property_id,
@@ -81,6 +102,7 @@ const ChatList = () => {
           last_message: latest.content,
           last_time: latest.created_at,
           unread_count: unread,
+          property_title: propTitle,
         });
       });
 
@@ -114,7 +136,6 @@ const ChatList = () => {
         ) : (
           <div className="space-y-2">
             {conversations.map((conv, i) => {
-              const property = PROPERTIES.find((p) => p.id === Number(conv.property_id));
               const initials = conv.other_name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
               return (
                 <motion.div
@@ -141,9 +162,9 @@ const ChatList = () => {
                         </Badge>
                       )}
                     </div>
-                    {property && (
+                    {conv.property_title && (
                       <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Building2 className="w-3 h-3" /> {property.title}
+                        <Building2 className="w-3 h-3" /> {conv.property_title}
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground truncate mt-0.5">{conv.last_message}</p>
