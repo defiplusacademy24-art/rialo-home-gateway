@@ -48,8 +48,8 @@ const HeroSection = () => {
               <Link to="/properties" className="px-6 py-3 rounded-lg gradient-cta text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-teal/25 hover:scale-105 transition-transform duration-200">
                 Explore Properties
               </Link>
-              <Link to="/signup" className="px-6 py-3 rounded-lg border border-white/30 text-primary-foreground font-semibold hover:bg-white/10 transition-colors hover:scale-105 transition-transform duration-200">
-                Get Started
+              <Link to={user ? "/dashboard" : "/signup"} className="px-6 py-3 rounded-lg border border-white/30 text-primary-foreground font-semibold hover:bg-white/10 transition-colors hover:scale-105 transition-transform duration-200">
+                {user ? "Dashboard" : "Get Started"}
               </Link>
             </motion.div>
 

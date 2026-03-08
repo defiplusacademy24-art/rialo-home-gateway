@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import testimonialBg from "@/assets/testimonial-bg.jpg";
 
 const testimonials = [
