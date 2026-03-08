@@ -109,18 +109,23 @@ Deno.serve(async (req) => {
 
         if (error) throw error;
 
-        // Auto-simulate: payment confirmed after creation
-        const updatedConditions = { ...data.conditions, payment_confirmed: true };
-        const newStatus = deriveStatus(updatedConditions);
+        // For crypto payments, auto-confirm payment (wallet deduction handled client-side)
+        // For bank transfers, keep payment_confirmed false until buyer uploads proof and seller confirms
+        let updated = data;
+        if ((currency || "USDT") !== "BANK_TRANSFER") {
+          const updatedConditions = { ...data.conditions, payment_confirmed: true };
+          const newStatus = deriveStatus(updatedConditions);
 
-        const { data: updated, error: updateError } = await supabase
-          .from("property_transactions")
-          .update({ conditions: updatedConditions, status: newStatus })
-          .eq("id", data.id)
-          .select()
-          .single();
+          const { data: autoUpdated, error: updateError } = await supabase
+            .from("property_transactions")
+            .update({ conditions: updatedConditions, status: newStatus })
+            .eq("id", data.id)
+            .select()
+            .single();
 
-        if (updateError) throw updateError;
+          if (updateError) throw updateError;
+          updated = autoUpdated;
+        }
 
         // Notify seller about the new transaction
         try {

@@ -645,7 +645,7 @@ const ReactiveTransaction = () => {
                         </div>
                       )}
 
-                      {/* Seller can view proof */}
+                      {/* Seller can view proof and confirm payment */}
                       {!isBuyer && proofUrl && (
                         <div className="mt-4 p-4 rounded-xl bg-accent/10 border border-accent/30 space-y-2">
                           <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -665,6 +665,26 @@ const ReactiveTransaction = () => {
                             />
                           </a>
                           <p className="text-xs text-muted-foreground">Click image to view full size</p>
+                          {!conditions.payment_confirmed && (
+                            <Button
+                              size="sm"
+                              className="w-full gradient-cta text-primary-foreground font-semibold mt-2"
+                              disabled={updating === "payment_confirmed"}
+                              onClick={() => handleUpdateCondition("payment_confirmed")}
+                            >
+                              {updating === "payment_confirmed" ? (
+                                <>
+                                  <RefreshCw size={14} className="animate-spin mr-1" />
+                                  Confirming...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 size={14} className="mr-1" />
+                                  Confirm Payment Received
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
