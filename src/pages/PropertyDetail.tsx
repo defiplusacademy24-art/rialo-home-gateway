@@ -1,15 +1,22 @@
-import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, ArrowLeft, Check, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { USDTIcon, ETHIcon, USDCIcon } from "@/components/CryptoIcons";
+import { useAuth } from "@/contexts/AuthContext";
+import { TransactionService } from "@/services/TransactionService";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { PROPERTIES } from "@/data/properties";
 
 const PropertyDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [initiating, setInitiating] = useState(false);
   const property = PROPERTIES.find((p) => p.id === Number(id));
 
   if (!property) {
@@ -166,8 +173,38 @@ const PropertyDetail = () => {
 
               {/* CTA */}
               <div className="bg-card rounded-2xl border border-border p-6 space-y-3">
-                <Button className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90 h-12 text-base">
-                  Initiate Purchase
+                <Button
+                  className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90 h-12 text-base"
+                  disabled={initiating}
+                  onClick={async () => {
+                    if (!user) {
+                      navigate("/login");
+                      return;
+                    }
+                    setInitiating(true);
+                    try {
+                      // Parse price as number
+                      const amount = Number(property.priceNGN.replace(/,/g, ""));
+                      const tx = await TransactionService.create({
+                        property_id: property.id.toString(),
+                        seller_id: "00000000-0000-0000-0000-000000000000", // mock seller
+                        amount,
+                        currency: "USDT",
+                      });
+                      toast.success("Transaction initiated!");
+                      navigate(`/transaction/${tx.id}`);
+                    } catch (err: any) {
+                      if (err.message?.includes("Active transaction exists")) {
+                        toast.info("You already have an active transaction for this property");
+                      } else {
+                        toast.error(err.message || "Failed to initiate purchase");
+                      }
+                    } finally {
+                      setInitiating(false);
+                    }
+                  }}
+                >
+                  {initiating ? "Initiating..." : "Initiate Purchase"}
                 </Button>
                 <Button variant="outline" className="w-full h-12 text-base">
                   Schedule Inspection
