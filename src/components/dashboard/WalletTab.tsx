@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Wallet, Copy, Eye, EyeOff, CreditCard, RefreshCw, ExternalLink, Shield, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import usdtLogo from "@/assets/usdt-logo.png";
+import usdcLogo from "@/assets/usdc-logo.png";
 import ethLogo from "@/assets/eth-logo.png";
 
 interface WalletData {
@@ -321,6 +322,15 @@ const WalletTab = () => {
             <img src={usdtLogo} alt="USDT" className="w-10 h-10 rounded-full shrink-0" />
             <div>
               <p className="text-sm font-semibold text-foreground">USDT (Tether)</p>
+              <p className="text-xs text-muted-foreground">Stablecoin · ERC-20</p>
+            </div>
+            <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
+          </div>
+
+          <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-background">
+            <img src={usdcLogo} alt="USDC" className="w-10 h-10 rounded-full shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">USDC (USD Coin)</p>
               <p className="text-xs text-muted-foreground">Stablecoin · ERC-20</p>
             </div>
             <CheckCircle className="w-5 h-5 text-emerald-500 ml-auto" />
