@@ -227,6 +227,57 @@ Deno.serve(async (req) => {
         });
       }
 
+      if (action === "cancel") {
+        const { transaction_id } = body;
+        if (!transaction_id) {
+          return new Response(JSON.stringify({ error: "Missing transaction_id" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const { data: tx, error: fetchErr } = await supabase
+          .from("property_transactions")
+          .select("*")
+          .eq("id", transaction_id)
+          .single();
+
+        if (fetchErr || !tx) {
+          return new Response(JSON.stringify({ error: "Transaction not found" }), {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Only buyer can cancel, and only if not completed
+        if (tx.buyer_id !== user.id) {
+          return new Response(JSON.stringify({ error: "Only the buyer can cancel" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        if (tx.status === "COMPLETED" || tx.status === "CANCELLED") {
+          return new Response(JSON.stringify({ error: "Transaction cannot be cancelled" }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const { data: updated, error: updateErr } = await supabase
+          .from("property_transactions")
+          .update({ status: "CANCELLED" })
+          .eq("id", transaction_id)
+          .select()
+          .single();
+
+        if (updateErr) throw updateErr;
+
+        return new Response(JSON.stringify(updated), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       return new Response(JSON.stringify({ error: "Unknown action" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

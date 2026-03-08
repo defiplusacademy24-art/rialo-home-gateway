@@ -81,6 +81,15 @@ export class TransactionService {
     return data;
   }
 
+  static async cancel(transaction_id: string): Promise<PropertyTransaction> {
+    const { data, error } = await supabase.functions.invoke("reactive-transaction-engine", {
+      body: { action: "cancel", transaction_id },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    return data;
+  }
+
   static async updateCondition(
     transaction_id: string,
     condition: keyof TransactionConditions,
