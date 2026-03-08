@@ -315,17 +315,29 @@ const PropertyDetail = () => {
                     </div>
                   </div>
                 </div>
-                <Button
-                  className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90"
-                  onClick={() => {
-                    if (!user) { navigate("/login"); return; }
-                    // Use actual seller ID if available (from DB property), fallback for static
-                    const sellerId = property.sellerId || `seller_${property.id}`;
-                    navigate(`/chat?propertyId=${property.id}&sellerId=${sellerId}`);
-                  }}
-                >
-                  <MessageCircle size={16} /> Contact Seller
-                </Button>
+                {isOwner ? (
+                  <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 text-center">
+                    <p className="text-sm font-medium text-foreground mb-2">This is your listing</p>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => navigate("/dashboard")}
+                    >
+                      <Settings size={16} /> Manage in Dashboard
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    className="w-full gradient-cta text-primary-foreground font-semibold hover:opacity-90"
+                    onClick={() => {
+                      if (!user) { navigate("/login"); return; }
+                      const sId = property.sellerId || `seller_${property.id}`;
+                      navigate(`/chat?propertyId=${property.id}&sellerId=${sId}`);
+                    }}
+                  >
+                    <MessageCircle size={16} /> Contact Seller
+                  </Button>
+                )}
               </div>
 
               {/* Payment Method Selection */}
