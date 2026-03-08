@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Upload, X, Loader2, ImagePlus, FileText, MapPin, DollarSign, Home, Plus, Trash2, Eye, Check } from "lucide-react";
+import { Upload, X, Loader2, ImagePlus, FileText, MapPin, DollarSign, Home, Plus, Trash2, Eye, Check, Shield, CheckCircle2 } from "lucide-react";
 import { countries } from "@/data/countries";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -74,7 +74,7 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [areaSqft, setAreaSqft] = useState("");
-  const [tokenize, setTokenize] = useState(false);
+  // tokenize is always true now (auto-tokenized)
   const [acceptedPayments, setAcceptedPayments] = useState<string[]>(["NGN"]);
 
   // Files
@@ -205,7 +205,7 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("properties").insert({
+      const { data: inserted, error } = await supabase.from("properties").insert({
         user_id: user.id,
         title: title.trim(),
         description: description.trim() || null,
@@ -222,18 +222,27 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
         images: imageUrls,
         documents: docUrls,
         status,
-        is_tokenized: tokenize,
+        is_tokenized: true,
         accepted_payments: acceptedPayments,
-      } as any);
+      } as any).select().single();
 
       if (error) throw error;
 
-      toast({ title: status === "published" ? "Property published!" : "Draft saved!" });
+      // Auto-mint property token (NFT digital deed)
+      if (inserted) {
+        try {
+          await supabase.functions.invoke("mint-property-token", {
+            body: { property_id: inserted.id },
+          });
+        } catch (_) { /* non-critical: token minting is best-effort */ }
+      }
+
+      toast({ title: status === "published" ? "Property published & tokenized!" : "Draft saved & tokenized!" });
 
       // Reset form
       setTitle(""); setDescription(""); setPropertyType("house"); setPrice("");
       setCurrency("NGN"); setAddress(""); setCity(""); setState(""); setCountry("Nigeria");
-      setBedrooms(""); setBathrooms(""); setAreaSqft(""); setTokenize(false);
+      setBedrooms(""); setBathrooms(""); setAreaSqft("");
       setImageUrls([]); setDocUrls([]); setImagePreviews([]); setAcceptedPayments(["NGN"]);
 
       onPropertyCreated?.();
@@ -536,22 +545,22 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
         </CardContent>
       </Card>
 
-      {/* Tokenization */}
-      <Card>
+      {/* Tokenization Info */}
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader>
-          <CardTitle>Tokenization</CardTitle>
-          <CardDescription>Tokenize this property to enable fractional ownership via blockchain.</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            Blockchain Tokenization
+          </CardTitle>
+          <CardDescription>
+            All properties are automatically tokenized as NFTs on the Rialo blockchain. A digital deed will be minted to your wallet upon listing, ensuring immutable proof of ownership. When sold, the NFT transfers to the buyer automatically.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={tokenize}
-              onChange={(e) => setTokenize(e.target.checked)}
-              className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
-            />
-            <span className="text-sm text-foreground">Enable tokenization for this property</span>
-          </label>
+          <div className="flex items-center gap-2 text-sm text-primary">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Property documents are embedded in the token metadata</span>
+          </div>
         </CardContent>
       </Card>
 

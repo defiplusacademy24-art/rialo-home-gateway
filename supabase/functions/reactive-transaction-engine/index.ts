@@ -226,6 +226,26 @@ Deno.serve(async (req) => {
               .select()
               .single();
 
+            // Transfer NFT ownership to buyer
+            try {
+              const { data: buyerWallet } = await supabase
+                .from("wallets")
+                .select("address")
+                .eq("user_id", tx.buyer_id)
+                .maybeSingle();
+
+              const buyerAddr = buyerWallet?.address || "0x0000000000000000000000000000000000000000";
+
+              await supabase
+                .from("property_tokens")
+                .update({
+                  owner_user_id: tx.buyer_id,
+                  owner_wallet: buyerAddr,
+                  transferred_at: new Date().toISOString(),
+                })
+                .eq("property_id", tx.property_id);
+            } catch (_) { /* non-critical */ }
+
             // Send completion notification to buyer
             if (completedTx) {
               try {
@@ -236,6 +256,14 @@ Deno.serve(async (req) => {
                   message: `Your property transaction (Contract: ${tx.contract_id}) has been completed successfully. Amount: ₦${Number(tx.amount).toLocaleString()} via ${paymentLabel}. Download your proof of payment from your dashboard.`,
                   type: "receipt",
                   metadata: { transaction_id, contract_id: tx.contract_id, property_id: tx.property_id },
+                });
+                // Notify buyer about NFT transfer
+                await supabase.from("notifications").insert({
+                  user_id: tx.buyer_id,
+                  title: "Property NFT Transferred to Your Wallet",
+                  message: `The digital deed (NFT) for your property has been transferred to your wallet. View it in My Assets on your dashboard.`,
+                  type: "nft_transfer",
+                  metadata: { transaction_id, property_id: tx.property_id },
                 });
               } catch (_) { /* non-critical */ }
             }

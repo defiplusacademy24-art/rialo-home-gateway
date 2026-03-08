@@ -310,6 +310,56 @@ export type Database = {
         }
         Relationships: []
       }
+      property_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json
+          minted_at: string
+          minted_by: string
+          owner_user_id: string
+          owner_wallet: string
+          property_id: string
+          token_id: string
+          transferred_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          minted_at?: string
+          minted_by: string
+          owner_user_id: string
+          owner_wallet: string
+          property_id: string
+          token_id: string
+          transferred_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json
+          minted_at?: string
+          minted_by?: string
+          owner_user_id?: string
+          owner_wallet?: string
+          property_id?: string
+          token_id?: string
+          transferred_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_tokens_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_transactions: {
         Row: {
           amount: number
