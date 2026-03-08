@@ -203,32 +203,46 @@ const SupportChatWidget = () => {
 
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {msg.role === "assistant" && (
-                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Bot className="w-3.5 h-3.5 text-primary" />
+              {messages.map((msg, i) => {
+                const isUser = msg.role === "user";
+                // A user message is "read" if the next message is from the assistant
+                const isRead = isUser && i < messages.length - 1 && messages[i + 1]?.role === "assistant";
+                const isPending = isUser && i === messages.length - 1;
+
+                return (
+                  <div key={i} className={`flex gap-2 ${isUser ? "justify-end" : "justify-start"}`}>
+                    {!isUser && (
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Bot className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-0.5">
+                      <div
+                        className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
+                          isUser
+                            ? "bg-primary text-primary-foreground rounded-br-md ml-auto"
+                            : "bg-muted text-foreground rounded-bl-md"
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap break-words">{renderContent(msg.content)}</p>
+                      </div>
+                      {isUser && (
+                        <span className={`text-[10px] ml-auto mr-1 ${isRead ? "text-primary" : "text-muted-foreground/50"}`}>
+                          {isRead ? "✓✓ Seen" : isPending && isLoading ? "Sending…" : "✓ Sent"}
+                        </span>
+                      )}
                     </div>
-                  )}
-                  <div
-                    className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-muted text-foreground rounded-bl-md"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{renderContent(msg.content)}</p>
+                    {isUser && (
+                      <Avatar className="w-7 h-7 shrink-0 mt-0.5">
+                        <AvatarImage src={avatarUrl || undefined} />
+                        <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                   </div>
-                  {msg.role === "user" && (
-                    <Avatar className="w-7 h-7 shrink-0 mt-0.5">
-                      <AvatarImage src={avatarUrl || undefined} />
-                      <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))}
+                );
+              })}
               {isLoading && messages[messages.length - 1]?.role === "user" && (
                 <div className="flex gap-2 items-start">
                   <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
