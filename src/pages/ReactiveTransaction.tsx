@@ -55,6 +55,11 @@ const ReactiveTransaction = () => {
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [sellerBank, setSellerBank] = useState<{ bank_name: string; account_name: string; account_number: string } | null>(null);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofUploading, setProofUploading] = useState(false);
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [sellerWalletAddress, setSellerWalletAddress] = useState<string | null>(null);
+  const [cryptoProcessing, setCryptoProcessing] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/login");
