@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2 } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2, ArrowRightLeft } from "lucide-react";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { USDTIcon, ETHIcon, USDCIcon } from "@/components/CryptoIcons";
@@ -35,8 +36,12 @@ const PropertyDetail = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [balances, setBalances] = useState<Record<string, { eth: string; usdt: string; usdc: string }> | null>(null);
   const [balancesLoading, setBalancesLoading] = useState(false);
+  const { rates, loading: ratesLoading, convert } = useExchangeRates();
 
   const property = PROPERTIES.find((p) => p.id === Number(id));
+
+  // Get the NGN price as a number for conversion
+  const priceNgn = property ? Number(property.priceNGN.replace(/,/g, "")) : 0;
 
   const fetchWalletAndBalances = useCallback(async () => {
     if (!user) return;
@@ -133,7 +138,7 @@ const PropertyDetail = () => {
 
                 <div className="flex flex-wrap items-baseline gap-4 mb-6">
                   <span className="text-2xl font-display font-bold text-foreground">₦{property.priceNGN}</span>
-                  <span className="text-muted-foreground">USDT ${property.priceUSD}</span>
+                  <span className="text-muted-foreground">≈ ${property.priceUSD}</span>
                 </div>
 
                 {/* Specs bar */}
@@ -248,9 +253,40 @@ const PropertyDetail = () => {
                   ))}
                 </div>
 
+                {/* Live Conversion Display */}
+                {selectedCurrency !== "BANK_TRANSFER" && (
+                  <div className="mt-4 p-3 rounded-xl bg-muted/30 border border-border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ArrowRightLeft size={14} className="text-primary" />
+                      <span className="text-xs font-semibold text-foreground">Live Conversion</span>
+                      {ratesLoading && <span className="inline-block w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" />}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">₦{priceNgn.toLocaleString()}</span>
+                        <span className="text-sm font-mono font-bold text-foreground">
+                          {rates ? (
+                            `≈ ${convert(priceNgn, "NGN", selectedCurrency)?.toLocaleString(undefined, {
+                              minimumFractionDigits: selectedCurrency === "ETH" ? 6 : 2,
+                              maximumFractionDigits: selectedCurrency === "ETH" ? 6 : 2,
+                            })} ${selectedCurrency}`
+                          ) : (
+                            "..."
+                          )}
+                        </span>
+                      </div>
+                      {rates && (
+                        <p className="text-[10px] text-muted-foreground">
+                          1 {selectedCurrency} ≈ ₦{(rates as any)[selectedCurrency]?.ngn?.toLocaleString() || "—"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Wallet Balance - only for crypto */}
                 {user && selectedCurrency !== "BANK_TRANSFER" && (
-                  <div className="mt-4 p-3 rounded-xl bg-muted/50 border border-border">
+                  <div className="mt-3 p-3 rounded-xl bg-muted/50 border border-border">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <Wallet size={14} className="text-muted-foreground" />
