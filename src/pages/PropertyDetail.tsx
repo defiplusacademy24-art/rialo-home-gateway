@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2 } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2, ArrowRightLeft } from "lucide-react";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { USDTIcon, ETHIcon, USDCIcon } from "@/components/CryptoIcons";
@@ -133,7 +134,7 @@ const PropertyDetail = () => {
 
                 <div className="flex flex-wrap items-baseline gap-4 mb-6">
                   <span className="text-2xl font-display font-bold text-foreground">₦{property.priceNGN}</span>
-                  <span className="text-muted-foreground">USDT ${property.priceUSD}</span>
+                  <span className="text-muted-foreground">≈ ${property.priceUSD}</span>
                 </div>
 
                 {/* Specs bar */}
