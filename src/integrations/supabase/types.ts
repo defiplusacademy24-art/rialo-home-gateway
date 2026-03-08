@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_key: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          property_id: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_key: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          property_id: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_key?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          property_id?: string
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       kyc_submissions: {
         Row: {
           address: string
