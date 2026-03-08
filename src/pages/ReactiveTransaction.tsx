@@ -529,161 +529,50 @@ const ReactiveTransaction = () => {
             >
               {tx.currency === "BANK_TRANSFER" ? (
                 <>
-                  <h3 className="text-base font-display font-bold text-foreground mb-4">Seller Bank Details</h3>
-                  {sellerBank ? (
+                  <h3 className="text-base font-display font-bold text-foreground mb-4">Bank Payment via Paystack</h3>
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border mb-4">
+                    <img src={nairaLogo} alt="NGN" className="w-10 h-10 rounded-full" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Amount</p>
+                      <p className="text-xl font-mono font-bold text-foreground">₦{Number(tx.amount).toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  {conditions.payment_confirmed ? (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-accent/10 border border-accent/30">
+                      <CheckCircle2 size={16} className="text-accent shrink-0" />
+                      <span className="text-sm text-foreground font-medium">Payment confirmed via Paystack</span>
+                    </div>
+                  ) : isBuyer && tx.status !== "COMPLETED" && tx.status !== "CANCELLED" ? (
                     <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
-                        <img src={nairaLogo} alt="NGN" className="w-10 h-10 rounded-full" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground">Bank Name</p>
-                          <p className="text-sm font-semibold text-foreground">{sellerBank.bank_name}</p>
-                        </div>
-                      </div>
-                      <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-2">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Account Name</p>
-                          <p className="text-sm font-semibold text-foreground">{sellerBank.account_name}</p>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Account Number</p>
-                            <p className="text-lg font-mono font-bold text-foreground">{sellerBank.account_number}</p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(sellerBank.account_number);
-                              toast.success("Account number copied");
-                            }}
-                            className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                          >
-                            <Copy size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <Building2 size={14} />
-                        Transfer ₦{Number(tx.amount).toLocaleString()} to this account
+                      <p className="text-sm text-muted-foreground">
+                        Pay securely via Paystack. You'll be redirected to complete payment, then returned here automatically.
                       </p>
-
-                      {/* Payment Proof Upload */}
-                      {isBuyer && tx.status !== "COMPLETED" && tx.status !== "CANCELLED" && (
-                        <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border space-y-3">
-                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                            <Upload size={14} />
-                            Upload Payment Proof
-                          </h4>
-                          <p className="text-xs text-muted-foreground">
-                            After making your bank transfer, upload a screenshot or receipt as proof of payment.
-                          </p>
-
-                          {proofUrl ? (
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/30">
-                                <CheckCircle2 size={16} className="text-accent shrink-0" />
-                                <span className="text-sm text-foreground font-medium">Payment proof uploaded</span>
-                              </div>
-                              <a
-                                href={proofUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-xs text-primary hover:underline"
-                              >
-                                <ImageIcon size={12} />
-                                View uploaded proof
-                              </a>
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <label className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors">
-                                <Upload size={20} className="text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">
-                                  {proofFile ? proofFile.name : "Click to select receipt image"}
-                                </span>
-                                <input
-                                  type="file"
-                                  accept="image/*,.pdf"
-                                  className="hidden"
-                                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                                />
-                              </label>
-                              {proofFile && (
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    className="flex-1 gradient-cta text-primary-foreground font-semibold"
-                                    disabled={proofUploading}
-                                    onClick={handleProofUpload}
-                                  >
-                                    {proofUploading ? (
-                                      <>
-                                        <RefreshCw size={14} className="animate-spin mr-1" />
-                                        Uploading...
-                                      </>
-                                    ) : (
-                                      "Upload Proof"
-                                    )}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => setProofFile(null)}
-                                  >
-                                    <X size={14} />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Seller can view proof and confirm payment */}
-                      {!isBuyer && proofUrl && (
-                        <div className="mt-4 p-4 rounded-xl bg-accent/10 border border-accent/30 space-y-2">
-                          <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                            <ImageIcon size={14} />
-                            Buyer's Payment Proof
-                          </h4>
-                          <a
-                            href={proofUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block"
-                          >
-                            <img
-                              src={proofUrl}
-                              alt="Payment proof"
-                              className="w-full max-h-48 object-contain rounded-lg border border-border"
-                            />
-                          </a>
-                          <p className="text-xs text-muted-foreground">Click image to view full size</p>
-                          {!conditions.payment_confirmed && (
-                            <Button
-                              size="sm"
-                              className="w-full gradient-cta text-primary-foreground font-semibold mt-2"
-                              disabled={updating === "payment_confirmed"}
-                              onClick={() => handleUpdateCondition("payment_confirmed")}
-                            >
-                              {updating === "payment_confirmed" ? (
-                                <>
-                                  <RefreshCw size={14} className="animate-spin mr-1" />
-                                  Confirming...
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 size={14} className="mr-1" />
-                                  Confirm Payment Received
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      )}
+                      <Button
+                        className="w-full gradient-cta text-primary-foreground font-semibold h-11"
+                        disabled={paystackLoading}
+                        onClick={handlePaystackPayment}
+                      >
+                        {paystackLoading ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin mr-2" />
+                            Redirecting to Paystack...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard size={14} className="mr-2" />
+                            Pay ₦{Number(tx.amount).toLocaleString()} with Paystack
+                          </>
+                        )}
+                      </Button>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <ShieldCheck size={14} />
+                        <span>Secured by Paystack. Payment auto-confirms on success.</span>
+                      </div>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
-                      <Building2 size={24} className="text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Seller has not added bank details yet.</p>
+                    <div className="p-3 rounded-xl bg-muted/30 border border-border">
+                      <p className="text-sm text-muted-foreground">Awaiting buyer's payment via Paystack.</p>
                     </div>
                   )}
                 </>
