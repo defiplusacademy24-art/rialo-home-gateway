@@ -208,9 +208,9 @@ const WalletTab = () => {
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="bg-white/10 rounded-xl p-4">
               <p className="text-xs opacity-60 mb-1">ETH Balance</p>
-              <p className="text-xl font-mono font-bold">
+              <p className="text-lg font-mono font-bold truncate">
                 {balancesLoading ? (
-                  <span className="inline-block w-20 h-6 bg-white/20 rounded animate-pulse" />
+                  <span className="inline-block w-16 h-6 bg-white/20 rounded animate-pulse" />
                 ) : (
                   currentBalances?.eth ?? "--"
                 )}
