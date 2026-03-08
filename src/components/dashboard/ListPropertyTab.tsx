@@ -5,13 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Upload, X, Loader2, ImagePlus, FileText, MapPin, DollarSign, Home, Plus, Trash2, Eye } from "lucide-react";
+import { Upload, X, Loader2, ImagePlus, FileText, MapPin, DollarSign, Home, Plus, Trash2, Eye, Check } from "lucide-react";
 import { countries } from "@/data/countries";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import ethLogo from "@/assets/eth-logo.png";
+import usdtLogo from "@/assets/usdt-logo.png";
+import usdcLogo from "@/assets/usdc-logo.png";
+import nairaLogo from "@/assets/naira-logo.jpg";
 
 interface ListPropertyTabProps {
   onPropertyCreated?: () => void;
@@ -29,6 +34,13 @@ const currencies = [
   { value: "NGN", label: "NGN (₦)" },
   { value: "USDT", label: "USDT" },
   { value: "ETH", label: "ETH" },
+];
+
+const PAYMENT_OPTIONS = [
+  { key: "NGN", label: "Naira (₦)", sub: "NGN Bank Transfer", logo: nairaLogo },
+  { key: "USDT", label: "USDT", sub: "Tether · ERC-20", logo: usdtLogo },
+  { key: "USDC", label: "USDC", sub: "USD Coin · ERC-20", logo: usdcLogo },
+  { key: "ETH", label: "Ethereum", sub: "Native currency", logo: ethLogo },
 ];
 
 const nigerianStates = [
@@ -62,6 +74,7 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
   const [bathrooms, setBathrooms] = useState("");
   const [areaSqft, setAreaSqft] = useState("");
   const [tokenize, setTokenize] = useState(false);
+  const [acceptedPayments, setAcceptedPayments] = useState<string[]>(["NGN"]);
 
   // Files
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -184,6 +197,11 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
       return;
     }
 
+    if (acceptedPayments.length === 0) {
+      toast({ title: "Select at least one payment method", variant: "destructive" });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { error } = await supabase.from("properties").insert({
@@ -204,7 +222,8 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
         documents: docUrls,
         status,
         is_tokenized: tokenize,
-      });
+        accepted_payments: acceptedPayments,
+      } as any);
 
       if (error) throw error;
 
@@ -214,7 +233,7 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
       setTitle(""); setDescription(""); setPropertyType("house"); setPrice("");
       setCurrency("NGN"); setAddress(""); setCity(""); setState(""); setCountry("Nigeria");
       setBedrooms(""); setBathrooms(""); setAreaSqft(""); setTokenize(false);
-      setImageUrls([]); setDocUrls([]); setImagePreviews([]);
+      setImageUrls([]); setDocUrls([]); setImagePreviews([]); setAcceptedPayments(["NGN"]);
 
       onPropertyCreated?.();
     } catch (err: any) {
