@@ -242,7 +242,7 @@ const ListPropertyTab = ({ onPropertyCreated }: ListPropertyTabProps) => {
       // Reset form
       setTitle(""); setDescription(""); setPropertyType("house"); setPrice("");
       setCurrency("NGN"); setAddress(""); setCity(""); setState(""); setCountry("Nigeria");
-      setBedrooms(""); setBathrooms(""); setAreaSqft(""); setTokenize(false);
+      setBedrooms(""); setBathrooms(""); setAreaSqft("");
       setImageUrls([]); setDocUrls([]); setImagePreviews([]); setAcceptedPayments(["NGN"]);
 
       onPropertyCreated?.();
