@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw } from "lucide-react";
+import { MapPin, ShieldCheck, Star, Bed, Bath, Maximize, MessageCircle, Check, ChevronRight, Wallet, RefreshCw, CreditCard, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { USDTIcon, ETHIcon, USDCIcon } from "@/components/CryptoIcons";
@@ -16,11 +16,14 @@ import ethLogo from "@/assets/eth-logo.png";
 import usdtLogo from "@/assets/usdt-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 
-const CURRENCIES = [
-  { key: "ETH", label: "ETH", sub: "Ethereum", logo: ethLogo, icon: <ETHIcon size={18} /> },
-  { key: "USDT", label: "USDT", sub: "Tether USD", logo: usdtLogo, icon: <USDTIcon size={18} /> },
-  { key: "USDC", label: "USDC", sub: "USD Coin", logo: usdcLogo, icon: <USDCIcon size={18} /> },
-] as const;
+type PaymentMethod = "ETH" | "USDT" | "USDC" | "BANK_TRANSFER";
+
+const CURRENCIES: { key: PaymentMethod; label: string; sub: string; logo?: string; icon?: React.ReactNode; isCrypto: boolean }[] = [
+  { key: "ETH", label: "ETH", sub: "Ethereum", logo: ethLogo, icon: <ETHIcon size={18} />, isCrypto: true },
+  { key: "USDT", label: "USDT", sub: "Tether USD", logo: usdtLogo, icon: <USDTIcon size={18} />, isCrypto: true },
+  { key: "USDC", label: "USDC", sub: "USD Coin", logo: usdcLogo, icon: <USDCIcon size={18} />, isCrypto: true },
+  { key: "BANK_TRANSFER", label: "Bank Transfer", sub: "NGN Direct Transfer", isCrypto: false },
+];
 
 const PropertyDetail = () => {
   const { id } = useParams();
