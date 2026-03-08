@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { TransactionService, PropertyTransaction, TRANSACTION_STATUSES } from "@/services/TransactionService";
 import { supabase } from "@/integrations/supabase/client";
+import { PROPERTIES } from "@/data/properties";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, Clock, CheckCircle2, Copy, ChevronRight, ArrowLeft, Circle,
@@ -147,7 +148,15 @@ const ReactiveTransaction = () => {
   }
 
   const conditions = tx.conditions;
-  const property = tx.properties;
+  const mockProperty = PROPERTIES.find((p) => p.id === Number(tx.property_id));
+  const property = mockProperty ? {
+    title: mockProperty.title,
+    city: mockProperty.location.split(",")[0],
+    state: mockProperty.location.split(",")[1]?.trim() || null,
+    images: [mockProperty.image],
+    price: Number(mockProperty.priceNGN.replace(/,/g, "")),
+    property_type: mockProperty.type,
+  } : null;
 
   return (
     <div className="min-h-screen bg-background">
