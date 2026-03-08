@@ -219,10 +219,26 @@ Deno.serve(async (req) => {
             // Don't auto-complete — wait for Paystack webhook transfer.success
           } else {
             // For crypto, complete immediately (simulation)
-            await supabase
+            const { data: completedTx } = await supabase
               .from("property_transactions")
               .update({ status: "COMPLETED" })
-              .eq("id", transaction_id);
+              .eq("id", transaction_id)
+              .select()
+              .single();
+
+            // Send completion notification to buyer
+            if (completedTx) {
+              try {
+                const paymentLabel = tx.currency === "BANK_TRANSFER" ? "Paystack (NGN)" : tx.currency;
+                await supabase.from("notifications").insert({
+                  user_id: tx.buyer_id,
+                  title: "Transaction Completed – Receipt Ready",
+                  message: `Your property transaction (Contract: ${tx.contract_id}) has been completed successfully. Amount: ₦${Number(tx.amount).toLocaleString()} via ${paymentLabel}. Download your proof of payment from your dashboard.`,
+                  type: "receipt",
+                  metadata: { transaction_id, contract_id: tx.contract_id, property_id: tx.property_id },
+                });
+              } catch (_) { /* non-critical */ }
+            }
           }
         }
 

@@ -4,8 +4,9 @@ import { TransactionService, PropertyTransaction, TRANSACTION_STATUSES } from "@
 import { PROPERTIES } from "@/data/properties";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle2, ArrowRight, RefreshCw, ShieldCheck } from "lucide-react";
+import { Clock, CheckCircle2, ArrowRight, RefreshCw, ShieldCheck, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import { downloadReceipt, ReceiptData } from "@/utils/generateReceipt";
 
 const statusColors: Record<string, string> = {
   PAYMENT_INITIATED: "bg-amber-500/10 text-amber-600 border-amber-200",
@@ -109,14 +110,33 @@ const MyTransactionsTab = () => {
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="text-right">
-                      {tx.status === "COMPLETED" ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                      ) : (
-                        <Clock className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {tx.status === "COMPLETED" ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const receiptData: ReceiptData = {
+                            contractId: tx.contract_id,
+                            propertyId: tx.property_id,
+                            buyerId: tx.buyer_id,
+                            sellerId: tx.seller_id,
+                            amount: tx.amount,
+                            currency: tx.currency,
+                            status: tx.status,
+                            completedAt: tx.updated_at,
+                          };
+                          downloadReceipt(receiptData);
+                        }}
+                      >
+                        <Download size={14} className="mr-1" />
+                        Receipt
+                      </Button>
+                    ) : (
+                      <Clock className="w-5 h-5 text-muted-foreground" />
+                    )}
                     <ArrowRight className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
