@@ -289,22 +289,14 @@ const PropertyDetail = () => {
                       toast.success("Transaction initiated!");
                       navigate(`/transaction/${tx.id}`);
                     } catch (err: any) {
-                      // Edge function returns 409 with transaction_id for active transactions
-                      // supabase.functions.invoke wraps non-2xx in FunctionsHttpError
-                      let errorBody: any = null;
-                      try {
-                        // Try to parse the context from the error
-                        if (err?.context?.body) {
-                          errorBody = JSON.parse(new TextDecoder().decode(await err.context.body.getReader().read().then((r: any) => r.value)));
-                        }
-                      } catch {}
-
-                      // Also check the TransactionService which already parses data.error
                       const msg = err.message || "";
-                      if (msg.includes("Active transaction exists")) {
+                      if (msg.includes("Active transaction exists") || err.transaction_id) {
                         toast.info("You already have an active transaction for this property. Redirecting...");
-                        // Try to extract transaction_id from the error or fetch it
-                        navigate("/dashboard");
+                        if (err.transaction_id) {
+                          navigate(`/transaction/${err.transaction_id}`);
+                        } else {
+                          navigate("/dashboard");
+                        }
                       } else {
                         toast.error(msg || "Failed to initiate purchase");
                       }
