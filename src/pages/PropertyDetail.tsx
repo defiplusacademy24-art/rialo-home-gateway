@@ -136,10 +136,39 @@ const PropertyDetail = () => {
                   <span>{property.location}</span>
                 </div>
 
-                <div className="flex flex-wrap items-baseline gap-4 mb-6">
+                <div className="flex flex-wrap items-baseline gap-4 mb-4">
                   <span className="text-2xl font-display font-bold text-foreground">₦{property.priceNGN}</span>
                   <span className="text-muted-foreground">≈ ${property.priceUSD}</span>
                 </div>
+
+                {/* All currency conversions */}
+                {rates && (
+                  <div className="grid grid-cols-3 gap-2 mb-6">
+                    {(["ETH", "USDT", "USDC"] as const).map((cur) => {
+                      const converted = convert(priceNgn, "NGN", cur);
+                      return (
+                        <div key={cur} className="flex items-center gap-2 p-2 rounded-lg bg-muted/40 border border-border">
+                          <img
+                            src={cur === "ETH" ? ethLogo : cur === "USDT" ? usdtLogo : usdcLogo}
+                            alt={cur}
+                            className="w-5 h-5 rounded-full shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground">{cur}</p>
+                            <p className="text-sm font-mono font-bold text-foreground truncate">
+                              {converted != null
+                                ? converted.toLocaleString(undefined, {
+                                    minimumFractionDigits: cur === "ETH" ? 4 : 2,
+                                    maximumFractionDigits: cur === "ETH" ? 4 : 2,
+                                  })
+                                : "—"}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Specs bar */}
                 <div className="flex flex-wrap gap-6 py-4 border-t border-b border-border text-sm text-muted-foreground">
