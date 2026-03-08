@@ -20,15 +20,6 @@ export interface PropertyTransaction {
   conditions: TransactionConditions;
   created_at: string;
   updated_at: string;
-  properties?: {
-    title: string;
-    city: string | null;
-    state: string | null;
-    images: string[] | null;
-    price: number;
-    property_type: string;
-    currency?: string;
-  };
 }
 
 export const TRANSACTION_STATUSES = [
