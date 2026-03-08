@@ -240,6 +240,7 @@ export type Database = {
           currency: string
           deadline: string
           id: string
+          payment_proof_url: string | null
           property_id: string
           seller_id: string
           status: string
@@ -254,6 +255,7 @@ export type Database = {
           currency?: string
           deadline: string
           id?: string
+          payment_proof_url?: string | null
           property_id: string
           seller_id: string
           status?: string
@@ -268,6 +270,7 @@ export type Database = {
           currency?: string
           deadline?: string
           id?: string
+          payment_proof_url?: string | null
           property_id?: string
           seller_id?: string
           status?: string
