@@ -71,6 +71,8 @@ const Dashboard = () => {
         return <MyTransactionsTab />;
       case "bank-details":
         return <BankDetailsTab />;
+      case "converter":
+        return <CurrencyConverterTab />;
       case "saved":
         return <PlaceholderTab title="Saved Properties" description="Properties you've bookmarked will appear here." />;
       case "kyc":
