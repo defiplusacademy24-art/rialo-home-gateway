@@ -15,7 +15,10 @@ const STORAGE_KEY = "rialestate_support_chat";
 const DEFAULT_MSG: Msg = { role: "assistant", content: "Hi! I'm **Ria**, your RialEstate assistant. How can I help you today? 😊" };
 
 const SupportChatWidget = () => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [initials, setInitials] = useState("U");
   const [messages, setMessages] = useState<Msg[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -29,6 +32,24 @@ const SupportChatWidget = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetch user profile
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url, full_name")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+        if (data?.full_name) {
+          setInitials(
+            data.full_name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)
+          );
+        }
+      });
+  }, [user]);
 
   // Persist messages to localStorage
   useEffect(() => {
