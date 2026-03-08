@@ -160,6 +160,7 @@ export type Database = {
       }
       properties: {
         Row: {
+          accepted_payments: string[]
           address: string | null
           area_sqft: number | null
           bathrooms: number | null
@@ -182,6 +183,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          accepted_payments?: string[]
           address?: string | null
           area_sqft?: number | null
           bathrooms?: number | null
@@ -204,6 +206,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          accepted_payments?: string[]
           address?: string | null
           area_sqft?: number | null
           bathrooms?: number | null
