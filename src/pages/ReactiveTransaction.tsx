@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import {
   ShieldCheck, Clock, CheckCircle2, Copy, ChevronRight, Circle,
   FileText, Home as HomeIcon, AlertCircle, Wallet, RefreshCw, Building2,
-  Upload, Image as ImageIcon, X
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
