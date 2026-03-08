@@ -207,15 +207,7 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "property_transactions_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       transactions: {
         Row: {
