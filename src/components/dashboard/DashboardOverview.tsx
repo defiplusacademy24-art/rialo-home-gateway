@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Calendar, Shield, ArrowRight, Clock, CheckCircle2, RefreshCw, Receipt } from "lucide-react";
+import { User, Mail, Calendar, Shield, ArrowRight, Clock, CheckCircle2, RefreshCw, Receipt, Building2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TransactionService, PropertyTransaction, TRANSACTION_STATUSES } from "@/services/TransactionService";
 import { PROPERTIES } from "@/data/properties";
@@ -61,9 +61,17 @@ const DashboardOverview = ({ fullName, email, avatarUrl, role, createdAt, kycSta
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl lg:text-3xl font-display font-bold text-foreground">
-        Welcome Back, {fullName || "User"}
-      </h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-2xl lg:text-3xl font-display font-bold text-foreground">
+          Welcome Back, {fullName || "User"}
+        </h1>
+        <Button
+          onClick={() => navigate("/properties")}
+          className="gradient-cta text-primary-foreground font-semibold hover:opacity-90"
+        >
+          <Building2 className="w-4 h-4 mr-2" /> Explore Properties
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
