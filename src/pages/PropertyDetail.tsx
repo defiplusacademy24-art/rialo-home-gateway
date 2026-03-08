@@ -454,9 +454,11 @@ const PropertyDetail = () => {
                     setInitiating(true);
                     try {
                       const amount = Number(property.priceNGN.replace(/,/g, ""));
+                      // Use actual seller ID for DB properties, fallback UUID for static
+                      const sellerId = property.sellerId || "00000000-0000-0000-0000-000000000000";
                       const tx = await TransactionService.create({
                         property_id: property.id.toString(),
-                        seller_id: "00000000-0000-0000-0000-000000000000",
+                        seller_id: sellerId,
                         amount,
                         currency: selectedCurrency,
                       });
