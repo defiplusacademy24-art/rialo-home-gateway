@@ -108,11 +108,11 @@ const DashboardOverview = ({ fullName, email, avatarUrl, roles, createdAt, kycSt
               <h1 className="text-xl lg:text-2xl font-display font-bold truncate">
                 Welcome back, {fullName || "User"} 👋
               </h1>
-              {role && (
-                <Badge className="bg-white/15 text-primary-foreground border-white/20 capitalize text-xs">
-                  {role}
+              {roles.map((r) => (
+                <Badge key={r} className="bg-white/15 text-primary-foreground border-white/20 capitalize text-xs">
+                  {r}
                 </Badge>
-              )}
+              ))}
             </div>
             <p className="text-sm text-white/70">Member since {memberSince}</p>
           </div>
@@ -148,7 +148,7 @@ const DashboardOverview = ({ fullName, email, avatarUrl, roles, createdAt, kycSt
         {[
           {
             label: "Your Role",
-            value: role ? role.charAt(0).toUpperCase() + role.slice(1) : "Not set",
+            value: roles.length > 0 ? roles.map((r) => r.charAt(0).toUpperCase() + r.slice(1)).join(" & ") : "Not set",
             icon: Shield,
             iconClass: "text-primary",
             bgClass: "bg-primary/10",
