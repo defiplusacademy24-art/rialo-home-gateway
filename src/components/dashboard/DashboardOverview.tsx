@@ -17,7 +17,7 @@ interface DashboardOverviewProps {
   fullName: string | null;
   email: string;
   avatarUrl: string | null;
-  role: string | null;
+  roles: string[];
   createdAt: string;
   kycStatus: string | null;
 }
