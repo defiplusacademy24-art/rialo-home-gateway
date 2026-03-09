@@ -81,8 +81,8 @@ const Dashboard = () => {
 
   if (loading || !user) return null;
 
-  // A user is a seller if their role is "seller" or "both"
-  const isSeller = role === "seller" || role === "both";
+  // A user is a seller if they have the "seller" role
+  const isSeller = roles.includes("seller");
 
   const renderContent = () => {
     switch (activeTab) {
@@ -92,7 +92,7 @@ const Dashboard = () => {
             fullName={profile?.full_name || null}
             email={user.email || ""}
             avatarUrl={profile?.avatar_url || null}
-            role={role}
+            role={roles.length === 2 ? "both" : roles[0] || null}
             createdAt={user.created_at}
             kycStatus={kycStatus}
           />
