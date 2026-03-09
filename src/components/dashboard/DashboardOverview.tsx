@@ -48,7 +48,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
-const DashboardOverview = ({ fullName, email, avatarUrl, role, createdAt, kycStatus }: DashboardOverviewProps) => {
+const DashboardOverview = ({ fullName, email, avatarUrl, roles, createdAt, kycStatus }: DashboardOverviewProps) => {
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<PropertyTransaction[]>([]);
   const [txLoading, setTxLoading] = useState(true);
