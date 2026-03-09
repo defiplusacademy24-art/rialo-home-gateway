@@ -114,7 +114,7 @@ const DashboardOverview = ({ fullName, email, avatarUrl, role, createdAt, kycSta
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-white/70">{email} · Member since {memberSince}</p>
+            <p className="text-sm text-white/70">Member since {memberSince}</p>
           </div>
 
           <Button
