@@ -58,7 +58,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
-  const [role, setRole] = useState<string | null>(null);
+  const [roles, setRoles] = useState<string[]>([]);
   const [kycStatus, setKycStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -67,13 +67,13 @@ const Dashboard = () => {
 
   const fetchData = useCallback(async () => {
     if (!user) return;
-    const [profileRes, roleRes, kycRes] = await Promise.all([
+    const [profileRes, rolesRes, kycRes] = await Promise.all([
       supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", user.id),
       supabase.from("kyc_submissions").select("status").eq("user_id", user.id).maybeSingle(),
     ]);
     if (profileRes.data) setProfile(profileRes.data);
-    if (roleRes.data) setRole(roleRes.data.role);
+    if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role));
     if (kycRes.data) setKycStatus(kycRes.data.status);
   }, [user]);
 
