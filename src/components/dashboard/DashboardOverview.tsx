@@ -17,7 +17,7 @@ interface DashboardOverviewProps {
   fullName: string | null;
   email: string;
   avatarUrl: string | null;
-  role: string | null;
+  roles: string[];
   createdAt: string;
   kycStatus: string | null;
 }
@@ -48,7 +48,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
 };
 
-const DashboardOverview = ({ fullName, email, avatarUrl, role, createdAt, kycStatus }: DashboardOverviewProps) => {
+const DashboardOverview = ({ fullName, email, avatarUrl, roles, createdAt, kycStatus }: DashboardOverviewProps) => {
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<PropertyTransaction[]>([]);
   const [txLoading, setTxLoading] = useState(true);
@@ -108,11 +108,11 @@ const DashboardOverview = ({ fullName, email, avatarUrl, role, createdAt, kycSta
               <h1 className="text-xl lg:text-2xl font-display font-bold truncate">
                 Welcome back, {fullName || "User"} 👋
               </h1>
-              {role && (
-                <Badge className="bg-white/15 text-primary-foreground border-white/20 capitalize text-xs">
-                  {role}
+              {roles.map((r) => (
+                <Badge key={r} className="bg-white/15 text-primary-foreground border-white/20 capitalize text-xs">
+                  {r}
                 </Badge>
-              )}
+              ))}
             </div>
             <p className="text-sm text-white/70">Member since {memberSince}</p>
           </div>
@@ -148,7 +148,7 @@ const DashboardOverview = ({ fullName, email, avatarUrl, role, createdAt, kycSta
         {[
           {
             label: "Your Role",
-            value: role ? role.charAt(0).toUpperCase() + role.slice(1) : "Not set",
+            value: roles.length > 0 ? roles.map((r) => r.charAt(0).toUpperCase() + r.slice(1)).join(" & ") : "Not set",
             icon: Shield,
             iconClass: "text-primary",
             bgClass: "bg-primary/10",

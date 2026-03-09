@@ -92,7 +92,7 @@ const Dashboard = () => {
             fullName={profile?.full_name || null}
             email={user.email || ""}
             avatarUrl={profile?.avatar_url || null}
-            role={roles.length === 2 ? "both" : roles[0] || null}
+            roles={roles}
             createdAt={user.created_at}
             kycStatus={kycStatus}
           />
