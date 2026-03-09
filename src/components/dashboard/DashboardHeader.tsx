@@ -1,8 +1,7 @@
-import { LogOut, Moon, Sun, Home, Building2 } from "lucide-react";
+import { LogOut, Moon, Sun, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import NotificationBell from "./NotificationBell";
 
 interface DashboardHeaderProps {
@@ -18,9 +17,11 @@ const tabLabels: Record<string, string> = {
   "my-listings": "My Listings",
   wallet: "Wallet",
   transactions: "My Transactions",
+  "my-assets": "My Assets",
   "bank-details": "Bank Details",
   converter: "Converter",
   messages: "Messages",
+  inspections: "Inspections",
   saved: "Saved Properties",
   kyc: "KYC Verification",
   settings: "Settings",
@@ -47,72 +48,68 @@ const DashboardHeader = ({ fullName, avatarUrl, activeTab, onTabChange }: Dashbo
     .toUpperCase()
     .slice(0, 2);
 
+  const currentLabel = tabLabels[activeTab] || "Dashboard";
+
   return (
-    <header className="bg-card border-b border-border px-4 lg:px-8 py-3">
-      <div className="flex items-center justify-between">
-        {/* Mobile logo */}
-        <Link to="/" className="lg:hidden flex items-center gap-2">
-          <span className="text-lg font-display font-bold text-foreground">
+    <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border px-4 lg:px-6 py-3">
+      <div className="flex items-center justify-between gap-4">
+
+        {/* Breadcrumb / page title */}
+        <div className="flex items-center gap-2 min-w-0">
+          {/* Mobile logo */}
+          <span className="lg:hidden text-base font-display font-bold text-foreground shrink-0">
             Rial<span className="text-primary">Estate</span>
           </span>
-        </Link>
 
-        {/* Desktop quick links */}
-        <div className="hidden lg:flex items-center gap-2 mr-2">
-          <Link
-            to="/"
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <Home size={16} />
-            Home
-          </Link>
-          <Link
-            to="/properties"
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <Building2 size={16} />
-            Properties
-          </Link>
+          {/* Desktop breadcrumb */}
+          <div className="hidden lg:flex items-center gap-1.5 text-sm">
+            <span className="text-muted-foreground font-medium">Dashboard</span>
+            {activeTab !== "dashboard" && (
+              <>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50" />
+                <span className="font-semibold text-foreground">{currentLabel}</span>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Desktop tabs */}
-        <nav className="hidden lg:flex items-center gap-1">
-          {Object.entries(tabLabels).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => onTabChange(id)}
-              className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === id
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-2">
+        {/* Right actions */}
+        <div className="flex items-center gap-1.5 shrink-0">
           <NotificationBell />
+
+          {/* Theme toggle */}
           <button
             onClick={() => setDark(!dark)}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            title={dark ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {dark ? <Sun size={18} /> : <Moon size={18} />}
+            {dark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
+
+          {/* Logout */}
           <button
             onClick={signOut}
-            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
             title="Logout"
           >
-            <LogOut size={18} />
+            <LogOut size={17} />
           </button>
-          <Avatar className="h-9 w-9 cursor-pointer" onClick={() => onTabChange("settings")}>
-            <AvatarImage src={avatarUrl || undefined} />
-            <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+
+          {/* Avatar → settings */}
+          <button
+            onClick={() => onTabChange("settings")}
+            className="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-xl hover:bg-muted transition-all group"
+          >
+            <Avatar className="h-8 w-8 ring-2 ring-border group-hover:ring-primary/40 transition-all">
+              <AvatarImage src={avatarUrl || undefined} />
+              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <span className="hidden sm:block text-sm font-medium text-foreground max-w-[120px] truncate">
+              {fullName || "Account"}
+            </span>
+          </button>
         </div>
       </div>
     </header>
